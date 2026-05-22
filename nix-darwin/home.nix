@@ -1,6 +1,13 @@
 { pkgs, lib, ... }:
 
 let
+  mattPocockSkills = pkgs.fetchFromGitHub {
+    owner = "mattpocock";
+    repo = "skills";
+    rev = "b8be62ffacb0118fa3eaa29a0923c87c8c11985c";
+    hash = "sha256-Qwuu27f95xgAJ4hdv/4TNahHhprCMIxl1H9f9ymEsno=";
+  };
+
   codexbar = pkgs.stdenvNoCC.mkDerivation rec {
     pname = "codexbar";
     version = "0.27.0";
@@ -60,6 +67,31 @@ in
   home.activation.createScreenshotsDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     mkdir -p "$HOME/screenshots"
   '';
+
+  home.file.".agents/skills/grill-with-docs" = {
+    source = "${mattPocockSkills}/skills/engineering/grill-with-docs";
+    force = true;
+  };
+
+  home.file.".claude/skills/grill-with-docs" = {
+    source = "${mattPocockSkills}/skills/engineering/grill-with-docs";
+    force = true;
+  };
+
+  home.file.".codex/skills/grill-with-docs" = {
+    source = "${mattPocockSkills}/skills/engineering/grill-with-docs";
+    force = true;
+  };
+
+  home.file."Documents/Startup/.agents/skills/grill-with-docs" = {
+    source = "${mattPocockSkills}/skills/engineering/grill-with-docs";
+    force = true;
+  };
+
+  home.file."Documents/Startup/.claude/skills/grill-with-docs" = {
+    source = "${mattPocockSkills}/skills/engineering/grill-with-docs";
+    force = true;
+  };
 
   home.activation.configureTerminalFont = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     terminal_plist="$HOME/Library/Preferences/com.apple.Terminal.plist"
