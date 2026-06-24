@@ -132,7 +132,6 @@ in
     pkgs.uv
     pkgs.vscode
     pkgs.yt-dlp
-    pkgs.zed-editor
   ];
 
   programs.zsh = {
@@ -259,7 +258,7 @@ in
         name = "Haruo Shimote";
         email = "587726+temosy@users.noreply.github.com";
       };
-      core.editor = "zeditor --wait";
+      core.editor = "vim";
       init.defaultBranch = "main";
       credential."https://github.com".helper = "!${pkgs.gh}/bin/gh auth git-credential";
       credential."https://gist.github.com".helper = "!${pkgs.gh}/bin/gh auth git-credential";
