@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, nixpkgs-llama-cpp, ... }:
 
 let
   mattPocockSkills = pkgs.fetchFromGitHub {
@@ -8,46 +8,13 @@ let
     hash = "sha256-Qwuu27f95xgAJ4hdv/4TNahHhprCMIxl1H9f9ymEsno=";
   };
 
-  codexbar = pkgs.stdenvNoCC.mkDerivation rec {
-    pname = "codexbar";
-    version = "0.27.0";
+  aiderChat = pkgs.aider-chat.overridePythonAttrs (old: {
+    dependencies = old.dependencies ++ [ pkgs.python3Packages.rsa ];
+  });
 
-    src = pkgs.fetchurl {
-      url = "https://github.com/steipete/CodexBar/releases/download/v${version}/CodexBar-macos-universal-${version}.zip";
-      hash = "sha256-tDnsrw7SNa+oCRYbGyzkCZpuWTxmL1677VfamZuXz5E=";
-    };
-
-    cliSrc = pkgs.fetchurl {
-      url = "https://github.com/steipete/CodexBar/releases/download/v${version}/CodexBarCLI-v${version}-macos-arm64.tar.gz";
-      hash = "sha256-v3k5ZL3Mxvnas+suQOEa47JWbfAx6FiwZf1ujqRBbcI=";
-    };
-
-    nativeBuildInputs = [ pkgs.unzip ];
-
-    unpackPhase = ''
-      runHook preUnpack
-      unzip -q "$src"
-      mkdir cli
-      tar -xzf "$cliSrc" -C cli
-      runHook postUnpack
-    '';
-
-    installPhase = ''
-      runHook preInstall
-      mkdir -p "$out/Applications" "$out/bin" "$out/share/codexbar"
-      cp -R CodexBar.app "$out/Applications/"
-      install -m 0755 cli/CodexBarCLI "$out/bin/CodexBarCLI"
-      ln -s "$out/bin/CodexBarCLI" "$out/bin/codexbar"
-      install -m 0644 cli/VERSION "$out/share/codexbar/VERSION"
-      runHook postInstall
-    '';
-
-    meta = {
-      description = "macOS menu bar app and CLI for AI coding provider usage limits";
-      homepage = "https://github.com/steipete/CodexBar";
-      license = lib.licenses.mit;
-      platforms = [ "aarch64-darwin" ];
-    };
+  llamaCppPkgs = import nixpkgs-llama-cpp {
+    system = pkgs.stdenv.hostPlatform.system;
+    config.allowUnfree = true;
   };
 in
 
@@ -68,17 +35,17 @@ in
     mkdir -p "$HOME/screenshots"
   '';
 
+  home.file.".local/bin/aider" = {
+    source = "${lib.getExe aiderChat}";
+    executable = true;
+  };
+
   home.file.".agents/skills/grill-with-docs" = {
     source = "${mattPocockSkills}/skills/engineering/grill-with-docs";
     force = true;
   };
 
   home.file.".claude/skills/grill-with-docs" = {
-    source = "${mattPocockSkills}/skills/engineering/grill-with-docs";
-    force = true;
-  };
-
-  home.file.".codex/skills/grill-with-docs" = {
     source = "${mattPocockSkills}/skills/engineering/grill-with-docs";
     force = true;
   };
@@ -95,7 +62,7 @@ in
 
   home.activation.configureTerminalFont = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     terminal_plist="$HOME/Library/Preferences/com.apple.Terminal.plist"
-    terminal_profile="Ocean"
+    terminal_profile="Clear Dark"
     terminal_font_data="YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGkCwwVFlUkbnVsbNQNDg8QERITFFZOU1NpemVYTlNmRmxhZ3NWTlNOYW1lViRjbGFzcyNAKAAAAAAAABAQgAKAA18QF1NvdXJjZUhhbkNvZGVKUC1SZWd1bGFy0hcYGRpaJGNsYXNzbmFtZVgkY2xhc3Nlc1ZOU0ZvbnSiGRtYTlNPYmplY3QIERokKTI3SUxRU1heZ253foWOkJKUrrO+x87RAAAAAAAAAQEAAAAAAAAAHAAAAAAAAAAAAAAAAAAAANo="
 
     [ -f "$terminal_plist" ] || exit 0
@@ -117,21 +84,33 @@ in
   '';
 
   home.packages = [
+    aiderChat
     pkgs.claude-code
     pkgs.claude-monitor
-    pkgs.codex
-    codexbar
     pkgs.gh
     pkgs.nodejs
     pkgs.obsidian
     pkgs.ghq
+    llamaCppPkgs.llama-cpp
     pkgs.peco
     pkgs.python3
     pkgs.thunderbird
     pkgs.tree
     pkgs.uv
     pkgs.vscode
+    pkgs.ffmpeg
     pkgs.yt-dlp
+
+    # Rust ツールチェーン（rust-overlay）。cargo/rustc/clippy/rustfmt/rust-analyzer を
+    # 1 つの toolchain で提供し、iOS クロスターゲット std を同梱する（api-player の Tauri iOS ビルド用）。
+    (pkgs.rust-bin.stable.latest.default.override {
+      extensions = [ "rust-src" "rust-analyzer" "clippy" "rustfmt" ];
+      targets = [ "aarch64-apple-ios" "aarch64-apple-ios-sim" ];
+    })
+
+    # Tauri モバイル（iOS）ビルド用ツール。
+    pkgs.cargo-tauri
+    pkgs.cocoapods
   ];
 
   programs.zsh = {
@@ -155,6 +134,7 @@ in
     shellAliases = {
       python = "python3";
       subl = "/Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl";
+      gemma-agent = "OLLAMA_API_BASE=http://127.0.0.1:11434 aider --model ollama_chat/gemma4:26b --chat-language Japanese --commit-language English --no-auto-commits";
       gitlog = "git log --oneline --graph";
       youtube-dl = "yt-dlp";
       ya = ''yt-dlp -x --embed-thumbnail --audio-format mp3 --audio-quality 0 -o "$HOME/Music/%(title)s.%(ext)s"'';
@@ -251,6 +231,12 @@ in
     enableZshIntegration = true;
   };
 
+  services.ollama = {
+    enable = true;
+    host = "127.0.0.1";
+    port = 11434;
+  };
+
   programs.git = {
     enable = true;
     settings = {
@@ -305,6 +291,25 @@ in
       RunAtLoad = true;
       StandardOutPath = "/Users/haruo/Library/Logs/normalize-screenshot-names.log";
       StandardErrorPath = "/Users/haruo/Library/Logs/normalize-screenshot-names.err.log";
+    };
+  };
+
+  # ComfyUI ローカルサーバを常駐化。venv 自体は Nix 管理外（uv で作成）のまま、
+  # 起動だけ宣言的に。adult-imagegen-rust アプリが 127.0.0.1:8188 へ接続する。
+  launchd.agents.comfyui = {
+    enable = true;
+    config = {
+      Label = "com.haruo.comfyui";
+      ProgramArguments = [
+        "/Users/haruo/ComfyUI/.venv/bin/python"
+        "/Users/haruo/ComfyUI/main.py"
+      ];
+      WorkingDirectory = "/Users/haruo/ComfyUI";
+      RunAtLoad = true;
+      KeepAlive = true;
+      ProcessType = "Background";
+      StandardOutPath = "/Users/haruo/Library/Logs/comfyui.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/comfyui.err.log";
     };
   };
 

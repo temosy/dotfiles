@@ -11,9 +11,15 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixpkgs-llama-cpp.url = "github:NixOS/nixpkgs/3d8f0f3f72a6cd4d93d0ad13203f2ea1cb7e1456";
+    # Rust ツールチェーン（iOS クロスターゲットを宣言的に追加するため）。
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nix-darwin, nixpkgs, home-manager }: {
+  outputs = { self, nix-darwin, nixpkgs, home-manager, nixpkgs-llama-cpp, rust-overlay }: {
     darwinConfigurations."Haruos-MacBook-Pro" = nix-darwin.lib.darwinSystem {
       system = "aarch64-darwin";
       modules = [
@@ -72,6 +78,8 @@
           system.stateVersion = 5;
           nixpkgs.hostPlatform = "aarch64-darwin";
           nixpkgs.config.allowUnfree = true;
+          # rust-overlay を適用（home.nix で pkgs.rust-bin を使えるようにする）。
+          nixpkgs.overlays = [ rust-overlay.overlays.default ];
 
           users.users.haruo = {
             name = "haruo";
@@ -83,6 +91,9 @@
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
+          home-manager.extraSpecialArgs = {
+            inherit nixpkgs-llama-cpp;
+          };
           home-manager.users.haruo = import ./home.nix;
         }
       ];
