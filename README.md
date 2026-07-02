@@ -2,6 +2,15 @@
 
 Personal dotfiles and macOS setup notes.
 
+## Repository map
+
+- `.vimrc` keeps the Vim configuration.
+- `.tmux.conf` keeps the tmux configuration.
+- `config.fish` keeps the fish shell configuration.
+- `nix-darwin/` keeps the nix-darwin and Home Manager configuration.
+- `zsh/.zshrc.generated` is a generated zsh snapshot for reference.
+- `update.sh` refreshes tracked files from the current machine.
+
 ## Nix managed macOS setup
 
 The current macOS environment is managed with nix-darwin and Home Manager.
