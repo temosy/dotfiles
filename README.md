@@ -45,6 +45,17 @@ Zed uses the local Git configuration for Git operations. `core.editor` is set to
 
 ## Updating this repository from the current machine
 
+Before running the update script, make sure the local machine has the source
+files in place:
+
+- `~/.vimrc`
+- `~/.tmux.conf`
+- `~/.config/fish/config.fish`
+- `~/.config/nix-darwin/flake.nix`
+- `~/.config/nix-darwin/home.nix`
+- `~/.config/nix-darwin/flake.lock`
+- `~/.zshrc`
+
 Run:
 
 ```sh
@@ -52,3 +63,9 @@ Run:
 ```
 
 This copies the current vim, tmux, fish, nix-darwin, and generated zsh files into the repository.
+
+Review the copied changes before committing:
+
+```sh
+git diff
+```
