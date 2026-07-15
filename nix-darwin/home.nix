@@ -16,6 +16,32 @@ let
     system = pkgs.stdenv.hostPlatform.system;
     config.allowUnfree = true;
   };
+
+  # Snapzy: menu-bar screenshot / recording / annotation app (CleanShot X alternative).
+  # Not in nixpkgs, so we unpack the notarized DMG release and expose Snapzy.app.
+  # home-manager links it into ~/Applications/Home Manager Apps. Sparkle self-update
+  # won't work from the read-only Nix store — bump `version`/`hash` here to upgrade.
+  snapzy = pkgs.stdenvNoCC.mkDerivation rec {
+    pname = "snapzy";
+    version = "1.29.1";
+    src = pkgs.fetchurl {
+      url = "https://github.com/duongductrong/Snapzy/releases/download/v${version}/Snapzy-v${version}.dmg";
+      hash = "sha256-12GAEAH+V5FE9IZvlBO6MsddGl3JQBH5uEztGCT1qIw=";
+    };
+    nativeBuildInputs = [ pkgs.undmg ];
+    sourceRoot = ".";
+    installPhase = ''
+      runHook preInstall
+      mkdir -p "$out/Applications"
+      cp -R Snapzy.app "$out/Applications/Snapzy.app"
+      runHook postInstall
+    '';
+    meta = {
+      description = "Menu-bar screenshots, recording, annotation and editing for macOS";
+      homepage = "https://github.com/duongductrong/Snapzy";
+      platforms = pkgs.lib.platforms.darwin;
+    };
+  };
 in
 
 {
@@ -100,17 +126,38 @@ in
     pkgs.vscode
     pkgs.ffmpeg
     pkgs.yt-dlp
+    snapzy
 
     # Rust ツールチェーン（rust-overlay）。cargo/rustc/clippy/rustfmt/rust-analyzer を
     # 1 つの toolchain で提供し、iOS クロスターゲット std を同梱する（api-player の Tauri iOS ビルド用）。
+    # wasm32-unknown-unknown は system-kakari サイトの Leptos(WASM) ビルド用。
     (pkgs.rust-bin.stable.latest.default.override {
       extensions = [ "rust-src" "rust-analyzer" "clippy" "rustfmt" ];
-      targets = [ "aarch64-apple-ios" "aarch64-apple-ios-sim" ];
+      targets = [ "aarch64-apple-ios" "aarch64-apple-ios-sim" "wasm32-unknown-unknown" ];
     })
 
     # Tauri モバイル（iOS）ビルド用ツール。
     pkgs.cargo-tauri
     pkgs.cocoapods
+
+    # Leptos(WASM) 用。trunk が wasm-bindgen / wasm-opt を自動取得してビルドする（system-kakari サイト）。
+    pkgs.trunk
+
+    # system-kakari の contact.php / region.php をローカルで扱うため。
+    # ・`php -l` の構文チェック
+    # ・scripts/dev-serve.sh の `php -S`（組み込みサーバー）で dist/ を配信し、region.php /
+    #   contact.php を本番同様に実行して地域ダッシュボードを確認する（trunk serve は静的配信のみ）
+    # NAS（Fedora）の PHP 8.5.6 系に合わせて php85 を選択（デフォルトの pkgs.php は 8.4系）。
+    pkgs.php85
+
+    # system-kakari の deploy.sh で dist/ を事前圧縮（brotli -q11 + gzip -9）するため。
+    # NAS nginx の brotli_static / gzip_static が実行時CPUゼロで配信する（動的圧縮より小さく速い）。
+    pkgs.brotli
+
+    # system-kakari の deploy.sh で dist/ のスプライトPNGを256色パレット化（PNG-8）するため。
+    # マスコットのAI生成シートは実測5万〜11万色（AAとグラデ入り）で重いので、256色に
+    # 量子化すると約-69%（実測・見た目無劣化）。元PNGは触らず dist の配布物だけ縮める。
+    pkgs.pngquant
   ];
 
   programs.zsh = {
@@ -303,13 +350,46 @@ in
       ProgramArguments = [
         "/Users/haruo/ComfyUI/.venv/bin/python"
         "/Users/haruo/ComfyUI/main.py"
+        # サンプリング中の中間プレビューを WebSocket で送る（アプリのリアルタイム表示用）。
+        # auto = TAESD があればそれ、無ければ latent2rgb（軽量・モデル不要）。
+        "--preview-method"
+        "auto"
       ];
       WorkingDirectory = "/Users/haruo/ComfyUI";
       RunAtLoad = true;
       KeepAlive = true;
-      ProcessType = "Background";
+      # 生成バックエンドは能動的に待つ対象なので Standard（CPU側処理を低優先にしない）。
+      # 旧 "Background" は E コア寄り・低優先でスケジュールされ、競合時にCPU側処理が譲られやすい。
+      ProcessType = "Standard";
       StandardOutPath = "/Users/haruo/Library/Logs/comfyui.log";
       StandardErrorPath = "/Users/haruo/Library/Logs/comfyui.err.log";
+    };
+  };
+
+  # system-kakari の地域ダッシュボード用 DB（kakari_region）へ Mac からアクセスするための
+  # 常駐 SSH トンネル。127.0.0.1:13306 → NAS の 127.0.0.1:3306（NAS 側のループバックに
+  # 接続するため、既存の読み取り専用ユーザー kakari_ro@'localhost' がそのまま使える。
+  # MariaDB は NAS 上で 0.0.0.0:3306 で待受しているが LAN 越しの新規グラントは作らない
+  # （攻撃対象を増やさないため）。切断時は launchd の KeepAlive で自動再接続。
+  launchd.agents.kakari-db-tunnel = {
+    enable = true;
+    config = {
+      Label = "com.haruo.kakari-db-tunnel";
+      ProgramArguments = [
+        "/usr/bin/ssh"
+        "-N"
+        "-o" "ExitOnForwardFailure=yes"
+        "-o" "ServerAliveInterval=30"
+        "-o" "ServerAliveCountMax=3"
+        "-o" "BatchMode=yes"
+        "-L" "13306:127.0.0.1:3306"
+        "haruo@192.168.1.18"
+      ];
+      RunAtLoad = true;
+      KeepAlive = true;
+      ProcessType = "Background";
+      StandardOutPath = "/Users/haruo/Library/Logs/kakari-db-tunnel.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/kakari-db-tunnel.err.log";
     };
   };
 
