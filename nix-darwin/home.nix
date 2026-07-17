@@ -8,6 +8,8 @@ let
     hash = "sha256-Qwuu27f95xgAJ4hdv/4TNahHhprCMIxl1H9f9ymEsno=";
   };
 
+  # `gemma-agent` uses Aider as its CLI frontend.
+  # Add Python's `rsa` dependency explicitly because aider-chat needs it at runtime.
   aiderChat = pkgs.aider-chat.overridePythonAttrs (old: {
     dependencies = old.dependencies ++ [ pkgs.python3Packages.rsa ];
   });
@@ -119,8 +121,6 @@ in
 
   home.packages = [
     aiderChat
-    pkgs.claude-code
-    pkgs.claude-monitor
     pkgs.codexbar
     pkgs.gh
     pkgs.nodejs
@@ -351,7 +351,7 @@ in
   };
 
   # ComfyUI ローカルサーバを常駐化。venv 自体は Nix 管理外（uv で作成）のまま、
-  # 起動だけ宣言的に。adult-imagegen-rust アプリが 127.0.0.1:8188 へ接続する。
+  # 起動だけ宣言的に。image-gen-rust アプリが 127.0.0.1:8188 へ接続する。
   launchd.agents.comfyui = {
     enable = true;
     config = {
