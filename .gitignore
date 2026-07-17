@@ -5,14 +5,35 @@
 
 !/.gitattributes
 !/.gitignore
+!/.profile
 !/AGENTS.md
 !/LICENSE
 !/README.md
 
+!/.agents/
+/.agents/*
+!/.agents/.skill-lock.json
+
+!/.claude/
+/.claude/*
+!/.claude/settings.json
+
 !/.config/
 /.config/*
+!/.config/git/
+/.config/git/*
+!/.config/git/ignore
+!/.config/nix/
+/.config/nix/*
+!/.config/nix/nix.conf
 !/.config/nix-darwin/
 /.config/nix-darwin/*
 !/.config/nix-darwin/flake.lock
 !/.config/nix-darwin/flake.nix
 !/.config/nix-darwin/home.nix
+!/.config/snapzy/
+/.config/snapzy/*
+!/.config/snapzy/config.toml
+!/.config/zed/
+/.config/zed/*
+!/.config/zed/settings.json

@@ -20,5 +20,10 @@ The root `.gitignore` is an allowlist. When adding a new dotfile path, update
 the allowlist deliberately. Never use a broad `git add -A` or `git add -f`
 against the home directory.
 
+Before tracking a file, inspect it for API keys, tokens, credentials, cookies,
+history, caches, and machine-generated state. Track the declarative source
+instead of Home Manager-generated symlinks such as `.zshrc`, `.zprofile`,
+`.zshenv`, and `.config/git/config`.
+
 Do not report the dotfiles update as complete while its reviewed repository
 changes remain uncommitted or unpushed.

@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/etc/profiles/per-user/haruo/bin/node /Users/haruo/projects/episodic-memory/cli/episodic-memory.js sync >> /Users/haruo/Library/Logs/episodic-memory-sync.log 2>&1"
+          }
+        ]
+      }
+    ]
+  },
+  "tui": "fullscreen",
+  "agentPushNotifEnabled": true
+}

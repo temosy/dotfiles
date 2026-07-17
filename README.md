@@ -6,12 +6,26 @@ macOS and Home Manager.
 
 ## Repository map
 
+- `.profile` keeps the remaining login-shell bootstrap outside Home Manager.
+- `.agents/.skill-lock.json` pins shared agent skill installations.
+- `.claude/settings.json` keeps the shareable Claude Code settings.
+- `.config/git/ignore` keeps the global Git ignore rules. Git identity and
+  credential-helper settings are generated from Home Manager.
+- `.config/nix/nix.conf` keeps the user-level Nix CLI settings.
 - `.config/nix-darwin/flake.nix` manages system packages and macOS defaults.
 - `.config/nix-darwin/home.nix` manages user packages, zsh, Vim, Home Manager
   files, and user launchd agents.
 - `.config/nix-darwin/flake.lock` pins the Nix inputs.
+- `.config/snapzy/config.toml` and `.config/zed/settings.json` keep shareable
+  application preferences.
 - `.gitignore` uses an allowlist so unrelated files in the home directory are
   never shown or staged accidentally.
+
+Authentication, history, caches, generated files, and machine-local settings
+are intentionally excluded. Examples include `.codex/auth.json`,
+`.codex/config.toml` (currently contains an API key), `.config/gh/hosts.yml`,
+`.config/x-bookmarks/cookies.json`, `.claude.json*`, `.zsh_history`,
+`.viminfo`, and `.zcompdump*`.
 
 ## Nix managed macOS setup
 

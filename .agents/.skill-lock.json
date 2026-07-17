@@ -1,0 +1,88 @@
+{
+  "version": 3,
+  "skills": {
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "3013fdeb8a11b10b1eb795ec3ae8bfca38f7c26d",
+      "installedAt": "2026-05-15T18:48:50.401Z",
+      "updatedAt": "2026-05-15T22:29:52.752Z"
+    },
+    "obsidian-cli": {
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kepano/obsidian-skills.git",
+      "skillPath": "skills/obsidian-cli/SKILL.md",
+      "skillFolderHash": "96254a554e480359de7b685571876f2e7f9ba57d",
+      "installedAt": "2026-05-15T18:53:30.998Z",
+      "updatedAt": "2026-05-15T22:29:40.169Z"
+    },
+    "obsidian-markdown": {
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kepano/obsidian-skills.git",
+      "skillPath": "skills/obsidian-markdown/SKILL.md",
+      "skillFolderHash": "5caf5d9e7de204f3904216857545f2aa36bcfcac",
+      "installedAt": "2026-05-15T18:53:31.001Z",
+      "updatedAt": "2026-05-15T22:29:40.169Z"
+    },
+    "browser-trace": {
+      "source": "browserbase/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/browserbase/skills.git",
+      "skillPath": "skills/browser-trace/SKILL.md",
+      "skillFolderHash": "e620bc50d05cee4b1cf3750e7d6d1caf9fb712b9",
+      "pluginName": "browser-trace",
+      "installedAt": "2026-05-15T18:53:39.648Z",
+      "updatedAt": "2026-05-15T18:53:39.648Z"
+    },
+    "remembering-conversations": {
+      "source": "obra/episodic-memory",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/episodic-memory.git",
+      "skillPath": "skills/remembering-conversations/SKILL.md",
+      "skillFolderHash": "e1d53410ca23cfd75dc425ef1e0c94668919ac88",
+      "installedAt": "2026-05-15T19:04:37.526Z",
+      "updatedAt": "2026-05-15T19:04:37.526Z"
+    },
+    "obsidian-bases": {
+      "source": "kepano/obsidian-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/kepano/obsidian-skills.git",
+      "skillPath": "skills/obsidian-bases/SKILL.md",
+      "skillFolderHash": "4bef60bb848bfb02b4172b552626d5741b0d4057",
+      "installedAt": "2026-05-15T22:29:40.167Z",
+      "updatedAt": "2026-05-15T22:29:40.167Z"
+    },
+    "workflow-orchestration-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/backend-development/skills/workflow-orchestration-patterns/SKILL.md",
+      "skillFolderHash": "d3a5944f1d4bd5aaa04b6b95c4bb6efe3439a5aa",
+      "installedAt": "2026-05-15T22:40:18.713Z",
+      "updatedAt": "2026-05-15T22:40:18.713Z"
+    },
+    "context-driven-development": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/conductor/skills/context-driven-development/SKILL.md",
+      "skillFolderHash": "319164fd27f0815a6e163af3aa3bef14105a8a72",
+      "installedAt": "2026-05-15T22:40:28.615Z",
+      "updatedAt": "2026-05-15T22:40:28.615Z"
+    },
+    "onedrive": {
+      "source": "membranedev/application-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/membranedev/application-skills.git",
+      "skillPath": "skills/onedrive/SKILL.md",
+      "skillFolderHash": "a79c9877d41ca51a4baf6e74ba4696cd255197c5",
+      "installedAt": "2026-05-15T22:43:12.424Z",
+      "updatedAt": "2026-05-15T22:43:12.424Z"
+    }
+  },
+  "dismissed": {}
+}
