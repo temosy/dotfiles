@@ -69,3 +69,15 @@ Review the copied changes before committing:
 ```sh
 git diff
 ```
+
+After changing dotfiles, do not stop after applying them locally. Commit and
+push the reviewed files to this repository in the same task:
+
+```sh
+git status --short
+git add <updated-files>
+git commit -m "<change summary>"
+git push origin master
+```
+
+Do not include unrelated changes or secrets.

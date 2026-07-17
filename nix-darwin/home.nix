@@ -61,6 +61,14 @@ in
     mkdir -p "$HOME/screenshots"
   '';
 
+  # CodexBar is installed from nixpkgs, so app-internal Sparkle updates cannot
+  # replace the read-only app bundle in the Nix store. Upgrade it via
+  # `nix flake update` and `darwin-rebuild switch` instead.
+  home.activation.disableCodexBarSelfUpdate = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    /usr/bin/defaults write com.steipete.codexbar SUEnableAutomaticChecks -bool false
+    /usr/bin/defaults write com.steipete.codexbar SUAutomaticallyUpdate -bool false
+  '';
+
   home.file.".local/bin/aider" = {
     source = "${lib.getExe aiderChat}";
     executable = true;
@@ -113,6 +121,7 @@ in
     aiderChat
     pkgs.claude-code
     pkgs.claude-monitor
+    pkgs.codexbar
     pkgs.gh
     pkgs.nodejs
     pkgs.obsidian
