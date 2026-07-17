@@ -132,6 +132,7 @@ in
     pkgs.thunderbird
     pkgs.tree
     pkgs.uv
+    pkgs.vim
     pkgs.vscode
     pkgs.ffmpeg
     pkgs.yt-dlp
@@ -402,26 +403,4 @@ in
     };
   };
 
-  programs.vim = {
-    enable = true;
-    settings = {
-      number = true;
-      relativenumber = true;
-      tabstop = 4;
-      shiftwidth = 4;
-      expandtab = true;
-    };
-    extraConfig = ''
-      syntax on
-      filetype plugin indent on
-      set termguicolors
-      colorscheme desert
-      set cursorline
-      set showmatch
-      set incsearch
-      set hlsearch
-      set ignorecase
-      set smartcase
-    '';
-  };
 }

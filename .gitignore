@@ -6,6 +6,8 @@
 !/.gitattributes
 !/.gitignore
 !/.profile
+!/.tmux.conf
+!/.vimrc
 !/AGENTS.md
 !/LICENSE
 !/README.md
