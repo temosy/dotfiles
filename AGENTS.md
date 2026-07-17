@@ -1,19 +1,24 @@
 # Agent instructions
 
-This repository is the persistent source for haruo's dotfiles.
+The home directory (`/Users/haruo`) is both the live dotfiles location and the
+Git worktree for `https://github.com/temosy/dotfiles`.
 
 ## Required workflow
 
-When an AI agent changes dotfiles on the current machine, including files under
+When an AI agent changes a tracked dotfile, including files under
 `~/.config/nix-darwin/`, it must finish the same task by:
 
-1. Synchronizing the relevant files into `/Users/haruo/projects/dotfiles`
-   (`./update.sh` is available for a full refresh).
+1. Running Git commands from `/Users/haruo`; no synchronization or copy step
+   is needed.
 2. Reviewing `git diff` and `git status --short`.
 3. Excluding unrelated changes and secrets.
-4. Committing the relevant files.
+4. Staging only explicit paths, then committing the relevant files.
 5. Pushing the commit to `origin master`
    (`https://github.com/temosy/dotfiles`).
+
+The root `.gitignore` is an allowlist. When adding a new dotfile path, update
+the allowlist deliberately. Never use a broad `git add -A` or `git add -f`
+against the home directory.
 
 Do not report the dotfiles update as complete while its reviewed repository
 changes remain uncommitted or unpushed.

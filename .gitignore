@@ -1,3 +1,18 @@
-result
-result-*
-.DS_Store
+# The home directory is the Git worktree. Ignore every top-level entry unless
+# it is explicitly allowlisted below, so personal files cannot be added by
+# accident.
+/*
+
+!/.gitattributes
+!/.gitignore
+!/AGENTS.md
+!/LICENSE
+!/README.md
+
+!/.config/
+/.config/*
+!/.config/nix-darwin/
+/.config/nix-darwin/*
+!/.config/nix-darwin/flake.lock
+!/.config/nix-darwin/flake.nix
+!/.config/nix-darwin/home.nix
