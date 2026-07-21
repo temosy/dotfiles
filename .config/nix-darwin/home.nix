@@ -133,7 +133,6 @@ in
     pkgs.tree
     pkgs.uv
     pkgs.vim
-    pkgs.vscode
     pkgs.ffmpeg
     pkgs.yt-dlp
     snapzy
