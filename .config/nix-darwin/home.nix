@@ -195,6 +195,17 @@ in
       youtube-dl = "yt-dlp";
       ya = ''yt-dlp -x --embed-thumbnail --audio-format mp3 --audio-quality 0 -o "$HOME/Music/%(title)s.%(ext)s"'';
       yaf = ''yt-dlp -x --audio-format flac --audio-quality 0 -o "$HOME/Music/%(title)s.%(ext)s"'';
+
+      # nix-darwin を最先端へ更新して切り替え、flake.lock を dotfiles に反映し、古い世代を掃除する。
+      # update → switch が成功したときだけ flake.lock を commit/push（壊れた lock は push しない）。
+      # GC は最後に必ず実行（switch 失敗時も掃除はしたいので `;` でつなぐ）。
+      nix-up = ''
+        nix flake update --flake ~/.config/nix-darwin && \
+        sudo darwin-rebuild switch --flake ~/.config/nix-darwin && \
+        ( cd ~ && git add .config/nix-darwin/flake.lock && \
+          git commit -m "Update flake inputs $(date +%F)" && git push ) ; \
+        sudo nix-collect-garbage --delete-older-than 14d
+      '';
     };
     initContent = ''
       typeset -U path
