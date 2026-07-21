@@ -44,6 +44,17 @@ let
       platforms = pkgs.lib.platforms.darwin;
     };
   };
+
+  # macos-mcp（Claude デスクトップ拡張）専用に固定した uv。
+  # 背景: pkgs.uv は署名なしで、nix-up のたびにストア実体（cdhash）が変わり、
+  # macOS のアクセシビリティ(TCC)許可が無効化されて MCP が起動失敗する（Server disconnected）。
+  # 対策: astral 公式リリースバイナリを FOD(fetchzip) で pin し、ストアパス・バイト・cdhash を固定する。
+  # 一度アクセシビリティを許可すれば nix-up しても許可が維持される。CLI の uv は pkgs.uv（最先端）のまま。
+  # 更新するときはこの version と hash を手動で bump する（例: nix-prefetch-url --unpack <url> → nix hash to-sri）。
+  uvMcpPin = pkgs.fetchzip {
+    url = "https://github.com/astral-sh/uv/releases/download/0.11.30/uv-aarch64-apple-darwin.tar.gz";
+    hash = "sha256-VoKYbVHReASpFJDqF1FXvEKvW8IAWvyzy0yBhmNyDQo=";
+  };
 in
 
 {
@@ -168,6 +179,12 @@ in
     # 量子化すると約-69%（実測・見た目無劣化）。元PNGは触らず dist の配布物だけ縮める。
     pkgs.pngquant
   ];
+
+  # macos-mcp 拡張が使う固定 uv を安定パスに公開する。
+  # 拡張の実行時 command（extensions-installations.json / manifest.json）はこの絶対パスを指す:
+  #   /Users/haruo/.local/share/macos-mcp/bin/uv
+  # ~/.local/bin ではなくここに置くのは、対話シェルの PATH に載せず CLI uv（nix 最先端）を汚さないため。
+  home.file.".local/share/macos-mcp/bin/uv".source = "${uvMcpPin}/uv";
 
   programs.zsh = {
     enable = true;
