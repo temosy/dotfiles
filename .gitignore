@@ -18,7 +18,13 @@
 
 !/.claude/
 /.claude/*
+!/.claude/CLAUDE.md
 !/.claude/settings.json
+
+# .codex には auth.json・history.jsonl・sessions/ がある。AGENTS.md だけ通す
+!/.codex/
+/.codex/*
+!/.codex/AGENTS.md
 
 !/.config/
 /.config/*
