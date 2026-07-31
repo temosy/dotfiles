@@ -216,11 +216,18 @@ in
       # nix-darwin を最先端へ更新して切り替え、flake.lock を dotfiles に反映し、古い世代を掃除する。
       # update → switch が成功したときだけ flake.lock を commit/push（壊れた lock は push しない）。
       # GC は最後に必ず実行（switch 失敗時も掃除はしたいので `;` でつなぐ）。
+      #
+      # ★commit の前に master に居ることを確かめる（2026-07-31 追加）。引数なしの `git push` は
+      #   upstream の無い枝だと失敗する。refactor/merge-services に居たまま3回回した結果、
+      #   commit だけ積まれて GitHub に届いていなかった。push 先も origin master と明示する。
       nix-up = ''
         nix flake update --flake ~/.config/nix-darwin && \
         sudo darwin-rebuild switch --flake ~/.config/nix-darwin && \
-        ( cd ~ && git add .config/nix-darwin/flake.lock && \
-          git commit -m "Update flake inputs $(date +%F)" && git push ) ; \
+        ( cd ~ && b=$(git symbolic-ref --short HEAD) && \
+          [ "$b" = master ] || { echo "nix-up: dotfiles が master に居ないので中止した（現在: $b）" >&2; exit 1; } ; \
+          git add .config/nix-darwin/flake.lock && \
+          git commit -m "Update flake inputs $(date +%F)" && \
+          git push origin master ) ; \
         sudo nix-collect-garbage --delete-older-than 14d
       '';
     };
