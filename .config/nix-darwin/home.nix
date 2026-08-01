@@ -357,6 +357,39 @@ in
     };
   };
 
+  # devlog（~/projects/devlog、cargo install 済みバイナリ）で作業記録を vault に毎時蓄積。
+  # 毎時は --no-llm（軽量・上書きで当日分を再集計）、23:40 に LLM で清書。
+  # Ollama 停止時は devlog 側が生データ出力へフォールバックするので失敗しない。
+  launchd.agents.devlog-hourly = {
+    enable = true;
+    config = {
+      Label = "com.haruo.devlog-hourly";
+      ProgramArguments = [
+        "/bin/sh" "-lc"
+        ''mkdir -p "$HOME/Documents/Startup/Devlog" && /Users/haruo/.cargo/bin/devlog today --no-llm --out "$HOME/Documents/Startup/Devlog/$(date +%F).md"''
+      ];
+      StartCalendarInterval = [ { Minute = 15; } ];
+      StandardOutPath = "/Users/haruo/Library/Logs/devlog-hourly.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/devlog-hourly.err.log";
+      RunAtLoad = false;
+    };
+  };
+
+  launchd.agents.devlog-nightly = {
+    enable = true;
+    config = {
+      Label = "com.haruo.devlog-nightly";
+      ProgramArguments = [
+        "/bin/sh" "-lc"
+        ''mkdir -p "$HOME/Documents/Startup/Devlog" && /Users/haruo/.cargo/bin/devlog today --out "$HOME/Documents/Startup/Devlog/$(date +%F).md"''
+      ];
+      StartCalendarInterval = [ { Hour = 23; Minute = 40; } ];
+      StandardOutPath = "/Users/haruo/Library/Logs/devlog-nightly.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/devlog-nightly.err.log";
+      RunAtLoad = false;
+    };
+  };
+
   launchd.agents.normalize-screenshot-names = {
     enable = true;
     config = {
