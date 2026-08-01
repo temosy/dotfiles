@@ -422,6 +422,26 @@ in
     };
   };
 
+  # 前月ぶんのインフルエンス数値（サイト実訪問・GSC・GitHub・ブログ記事数）を
+  # vault の月次記録テーブルへ書き込む（system-kakari scripts/influence_monthly.py）。
+  # 読み取り専用（vault 以外は書き換えない）なので devlog の隔離クローンと共用してよい。
+  launchd.agents.influence-monthly = {
+    enable = true;
+    config = {
+      Label = "com.haruo.influence-monthly";
+      ProgramArguments = [
+        "/bin/sh" "-lc"
+        (devlogPublishSync + ''
+          if [ -f scripts/influence_monthly.py ]; then python3 scripts/influence_monthly.py; fi
+        '')
+      ];
+      StartCalendarInterval = [ { Day = 1; Hour = 6; Minute = 10; } ];
+      StandardOutPath = "/Users/haruo/Library/Logs/influence-monthly.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/influence-monthly.err.log";
+      RunAtLoad = false;
+    };
+  };
+
   launchd.agents.devlog-nightly = {
     enable = true;
     config = {
