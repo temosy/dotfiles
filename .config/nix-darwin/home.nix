@@ -55,6 +55,19 @@ let
     url = "https://github.com/astral-sh/uv/releases/download/0.11.30/uv-aarch64-apple-darwin.tar.gz";
     hash = "sha256-VoKYbVHReASpFJDqF1FXvEKvW8IAWvyzy0yBhmNyDQo=";
   };
+
+  # devlog の記事化・Telegram承認・自動公開（system-kakari PR #320）。
+  # ~/projects/system-kakari は日中インタラクティブに使う作業ツリー（ブランチ切替・
+  # 未コミット変更あり）なので、実行は専用の隔離クローンから行う。毎回 origin/main
+  # に同期してから起動するので、スクリプトがまだ main に無ければ静かにスキップする。
+  devlogPublishSync = ''
+    CLONE="$HOME/Library/Caches/devlog-publish/system-kakari"
+    mkdir -p "$(dirname "$CLONE")"
+    if [ ! -d "$CLONE/.git" ]; then
+      git clone git@github.com:temosy/system-kakari.git "$CLONE" || exit 0
+    fi
+    cd "$CLONE" && git fetch origin main -q && git checkout -q main && git reset --hard -q origin/main
+  '';
 in
 
 {
@@ -371,6 +384,40 @@ in
       StartCalendarInterval = [ { Minute = 15; } ];
       StandardOutPath = "/Users/haruo/Library/Logs/devlog-hourly.log";
       StandardErrorPath = "/Users/haruo/Library/Logs/devlog-hourly.err.log";
+      RunAtLoad = false;
+    };
+  };
+
+  launchd.agents.devlog-draft = {
+    enable = true;
+    config = {
+      Label = "com.haruo.devlog-draft";
+      ProgramArguments = [
+        "/bin/sh" "-lc"
+        (devlogPublishSync + ''
+          if [ -f scripts/devlog_draft.py ]; then python3 scripts/devlog_draft.py; fi
+        '')
+      ];
+      StartCalendarInterval = [ { Hour = 23; Minute = 55; } ];
+      StandardOutPath = "/Users/haruo/Library/Logs/devlog-draft.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/devlog-draft.err.log";
+      RunAtLoad = false;
+    };
+  };
+
+  launchd.agents.devlog-publish-check = {
+    enable = true;
+    config = {
+      Label = "com.haruo.devlog-publish-check";
+      ProgramArguments = [
+        "/bin/sh" "-lc"
+        (devlogPublishSync + ''
+          if [ -f scripts/devlog_publish_check.py ]; then python3 scripts/devlog_publish_check.py; fi
+        '')
+      ];
+      StartInterval = 1800;
+      StandardOutPath = "/Users/haruo/Library/Logs/devlog-publish-check.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/devlog-publish-check.err.log";
       RunAtLoad = false;
     };
   };
