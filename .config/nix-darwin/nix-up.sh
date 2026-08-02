@@ -57,6 +57,11 @@ if [ "$DO_UPDATE" = 1 ]; then
       updated=1
       say "  ✓ ビルド成功。更新を採用する。"
     else
+      # ★復元を最初に行う。表示より前。
+      #   2026-08-02、この cp を装飾的な say の後ろに置いていたため、say の
+      #   1行が `unbound variable` で落ちて **lock が壊れたまま残った**。
+      #   安全側に戻す操作を、表示の成否に依存させない。
+      cp "$BACKUP" "$LOCK"
       say ""
       say "⚠ nix-up: 更新後の nixpkgs でビルドが失敗した。**更新を破棄して現行 lock で適用する。**"
       say "   失敗した derivation:"
@@ -64,8 +69,9 @@ if [ "$DO_UPDATE" = 1 ]; then
       grep -E "^\s+> (can't find file to patch|error:|.*[Ee]rror)" "$BUILDLOG" | head -3 | sed 's/^/     /' >&2
       say ""
       say "   上流が直ったか試すには、後日もう一度 nix-up を実行する。"
-      say "   ログ: $BUILDLOG（このプロセス終了で消える）"
-      cp "$BACKUP" "$LOCK"
+      # ★変数の直後が全角文字のときは必ずブレースで囲む。囲まないと bash が
+      #   マルチバイト文字の先頭バイトを変数名の一部として読み、set -u で落ちる。
+      say "   ログ: ${BUILDLOG}（このプロセス終了で消える）"
     fi
   fi
 fi
@@ -97,7 +103,7 @@ if [ "$updated" = 1 ]; then
     cd "$HOME" || exit 1
     b="$(git symbolic-ref --short HEAD)"
     if [ "$b" != master ]; then
-      say "nix-up: dotfiles が master に居ないので flake.lock の commit は見送る（現在: $b）"
+      say "nix-up: dotfiles が master に居ないので flake.lock の commit は見送る（現在: ${b}）"
       exit 0
     fi
     git diff --quiet -- .config/nix-darwin/flake.lock && { say "nix-up: flake.lock に差分なし"; exit 0; }
