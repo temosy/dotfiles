@@ -92,6 +92,7 @@ build_ok() {
 }
 
 updated=0
+discarded=0   # 更新を試したが壊れていて破棄した
 
 if [ "$DO_UPDATE" = 1 ]; then
   cp "$LOCK" "$BACKUP"
@@ -111,6 +112,7 @@ if [ "$DO_UPDATE" = 1 ]; then
       #   1行が `unbound variable` で落ちて **lock が壊れたまま残った**。
       #   安全側に戻す操作を、表示の成否に依存させない。
       cp "$BACKUP" "$LOCK"
+      discarded=1
       say ""
       say "⚠ nix-up: 更新後の nixpkgs でビルドが失敗した。**更新を破棄して現行 lock で適用する。**"
       show_failure
@@ -168,7 +170,20 @@ else
   say "nix-up: flake.lock は更新していない（上流が直ったら次回の nix-up で採用される）"
 fi
 
-# GC は成功したときだけ。失敗した直後に走らせると、再挑戦のたびに
-# ビルド成果物を捨てて時間を無駄にする（2026-08-02 に 2回で計 2.3GB 捨てた）。
+# GC は「更新を破棄していないとき」だけ。
+#
+# ★判定は switch の成否ではなく「破棄したか」で行う。
+#   2026-08-02、条件が switch の成否だったため、更新を破棄した回でも GC が走り、
+#   検証のために正常にビルドできていた新 nixpkgs 側の依存まで 1.4GiB 消した。
+#   上流が壊れている間は毎回それを再ビルドすることになる。
+#   破棄した回の成果物は「次の挑戦で再利用したいもの」そのものなので残す。
+#
+#   上流が長く壊れていて store を掃除したくなったら nix-switch（--no-update）を使う。
+if [ "$discarded" = 1 ]; then
+  say "nix-up: 更新を破棄した回なので GC しない（次回の再ビルドを避けるため）"
+  say "        掃除したいときは nix-switch を使う"
+  exit 0
+fi
+
 say "→ 古い世代を掃除（14日より前）"
 sudo nix-collect-garbage --delete-older-than 14d
