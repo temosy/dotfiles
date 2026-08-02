@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dotfiles（~/ 自体がワークツリー・public リポジトリ）へのコミット前に
+# 秘密情報の混入を機械で止める。中身は ~/.config/git/secret-scan.sh。
+#
+# 誤検出で通したいときは内容を確認したうえで:
+#   git commit --no-verify
+exec "$HOME/.config/git/secret-scan.sh" --staged
