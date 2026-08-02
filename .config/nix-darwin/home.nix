@@ -244,6 +244,26 @@ in
         sudo nix-collect-garbage --delete-older-than 14d
       '';
     };
+    # .zshenv に入る = **対話・非対話を問わず全ての zsh で読まれる**。
+    # launchd から `sh -lc` で起動されるジョブや、エージェント経由のコマンドまで
+    # 届かせるにはここでないと駄目（initContent = .zshrc は対話シェルのみ）。
+    #
+    # 1Password サービスアカウントのトークンを環境に置き、op を非対話にする。
+    # これが無いと op は毎回デスクトップアプリの Touch ID 確認を出し、
+    # 無人実行のジョブがそこで止まる（実際に devlog の毎時ジョブが踏んだ）。
+    #
+    # ★副作用: これを設定すると op は **automation ボールトしか見えなくなる**。
+    #   Private / Shared のアイテムを CLI から読むとエラーになる（GUI は影響なし）。
+    #   自動化が使う秘密情報は全て automation に移してある。
+    #   一時的に個人ボールトを CLI で触りたいときは `unset OP_SERVICE_ACCOUNT_TOKEN`。
+    #
+    # トークン本体は ~/.config/op/service-account-token（0600・.gitignore 済み）。
+    # ここにはパスしか書かない。
+    envExtra = ''
+      if [ -r "$HOME/.config/op/service-account-token" ]; then
+        export OP_SERVICE_ACCOUNT_TOKEN="$(tr -d '[:space:]' < "$HOME/.config/op/service-account-token")"
+      fi
+    '';
     initContent = ''
       typeset -U path
 
@@ -289,8 +309,8 @@ in
           return 1
         fi
 
-        NICO_VIDEO_USER="$(op read "op://Private/niconico/username")" || return 1
-        NICO_VIDEO_PASS="$(op read "op://Private/niconico/password")" || return 1
+        NICO_VIDEO_USER="$(op read "op://automation/niconico/username")" || return 1
+        NICO_VIDEO_PASS="$(op read "op://automation/niconico/password")" || return 1
         export NICO_VIDEO_USER NICO_VIDEO_PASS
       }
 
