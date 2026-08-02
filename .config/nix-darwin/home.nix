@@ -375,6 +375,22 @@ in
     };
   };
 
+  # 秘密情報のコミット前チェック（~/.config/git/hooks/pre-commit → secret-scan.sh）を
+  # **dotfiles リポジトリにだけ**有効化する。
+  #
+  # core.hooksPath をグローバル（programs.git.settings）に置くと全リポジトリの
+  # 既存フックを黙って上書きしてしまうので、~/.git/config へローカル設定する。
+  # ~/ 自体が public な dotfiles のワークツリーで、ここだけが「うっかり commit
+  # すると即公開される」性質を持つため、対象もここだけでよい。
+  #
+  # activation で毎回入れ直すのは、Mac を再構築したときに設定が消えないようにするため
+  # （設定値はローカルの .git/config にあり、Nix ストアには乗らない）。
+  home.activation.dotfilesGitHooks = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ -d "$HOME/.git" ]; then
+      /usr/bin/env git -C "$HOME" config core.hooksPath "$HOME/.config/git/hooks"
+    fi
+  '';
+
   launchd.agents.x-bookmarks = {
     enable = true;
     config = {
