@@ -381,9 +381,14 @@ in
   #
   # activation で毎回入れ直すのは、Mac を再構築したときに設定が消えないようにするため
   # （設定値はローカルの .git/config にあり、Nix ストアには乗らない）。
+  # ★git は絶対パスで呼ぶ。activation 中の PATH には git が居ない
+  #   （2026-08-02 に `/usr/bin/env git` と書いて `env: git: No such file or directory`
+  #   で activation 全体が止まった）。
+  # ★|| true を付ける。これは補助的な設定であって、ここが失敗しても
+  #   システムの適用そのものは通すべき。critical path に載せない。
   home.activation.dotfilesGitHooks = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     if [ -d "$HOME/.git" ]; then
-      /usr/bin/env git -C "$HOME" config core.hooksPath "$HOME/.config/git/hooks"
+      ${pkgs.git}/bin/git -C "$HOME" config core.hooksPath "$HOME/.config/git/hooks" || true
     fi
   '';
 
