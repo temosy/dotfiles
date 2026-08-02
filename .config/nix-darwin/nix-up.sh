@@ -22,10 +22,23 @@ set -uo pipefail
 
 FLAKE="$HOME/.config/nix-darwin"
 LOCK="$FLAKE/flake.lock"
+LOCK_REL=".config/nix-darwin/flake.lock"
+
+# 失敗ログと破棄した lock の置き場。**プロセス終了後も残す**。
+# 一時ディレクトリに置くと、失敗を調べたい人が読む前に消える。
+KEEP="$HOME/.cache/nix-up"
+mkdir -p "$KEEP"
 
 # 引数
 DO_UPDATE=1
-[ "${1:-}" = "--no-update" ] && DO_UPDATE=0
+CHECK_ONLY=0
+case "${1:-}" in
+  --no-update) DO_UPDATE=0 ;;
+  # --check: lock の健全化とビルド検証だけ行い、switch も GC もしない。
+  # sudo 無しで安全網そのものを試せるようにしておく（この安全網は
+  # 2026-08-02 に「壊れた lock を復元する」欠陥を抱えたまま動いていた）。
+  --check)     DO_UPDATE=0; CHECK_ONLY=1 ;;
+esac
 
 # build が cwd に result シンボリックリンクを作る。ストアパスを GC から
 # 守り続けてしまうので、一時ディレクトリで実行して後で消す。
@@ -36,6 +49,42 @@ cleanup() { rm -rf "$WORK"; }
 trap cleanup EXIT
 
 say() { printf '%s\n' "$*" >&2; }
+
+# ★安全網の基準は「commit 済みの lock」であって、ワークツリーの lock ではない。
+#
+#   2026-08-02、前回の実行が壊れた lock をワークツリーに残したまま終わった。
+#   次の実行はその壊れた版をバックアップとして退避し、切り戻し先そのものが
+#   壊れていたため「現行 lock でも失敗する＝home.nix 側の問題」と誤診断した。
+#   実際には home.nix は正常で、commit 済みの lock は普通にビルドできた。
+#
+#   未コミットの lock は前回の異常終了の痕跡とみなして捨てる。捨てた版は
+#   $KEEP に残すので、意図的な手編集だった場合も戻せる。
+if git -C "$HOME" rev-parse --git-dir >/dev/null 2>&1 &&
+   ! git -C "$HOME" diff --quiet -- "$LOCK_REL" 2>/dev/null; then
+  cp "$LOCK" "$KEEP/flake.lock.discarded"
+  git -C "$HOME" checkout -- "$LOCK_REL"
+  say "⚠ nix-up: 未コミットの flake.lock が残っていた（前回の異常終了の痕跡）。"
+  say "   commit 済みの版に戻して進む。捨てた版: ${KEEP}/flake.lock.discarded"
+  say ""
+fi
+
+# ビルド失敗の**原因**を出す。`Cannot build ...` の連鎖は依存が落ちた結果で
+# あって原因ではないので、実際に落ちた builder の出力（`> ` 始まり）を探す。
+show_failure() {
+  cp "$BUILDLOG" "$KEEP/build.log"
+  say "   失敗した derivation:"
+  grep -oE "Cannot build '[^']+'" "$BUILDLOG" | head -5 | sed 's/^/     /' >&2
+  # ★grep の結果を判定に使うときは、パイプの終了状態を見ない。
+  #   `grep ... | sed` の $? は sed のもので、常に 0 になる。
+  if grep -qE '^[[:space:]]+> ' "$BUILDLOG"; then
+    say "   builder の出力（末尾15行）:"
+    grep -E '^[[:space:]]+> ' "$BUILDLOG" | tail -15 | sed 's/^/     /' >&2
+  else
+    say "   ログ末尾:"
+    tail -15 "$BUILDLOG" | sed 's/^/     /' >&2
+  fi
+  say "   全文: ${KEEP}/build.log"
+}
 
 build_ok() {
   # $1 = 表示用ラベル。成功なら 0。
@@ -64,14 +113,9 @@ if [ "$DO_UPDATE" = 1 ]; then
       cp "$BACKUP" "$LOCK"
       say ""
       say "⚠ nix-up: 更新後の nixpkgs でビルドが失敗した。**更新を破棄して現行 lock で適用する。**"
-      say "   失敗した derivation:"
-      grep -oE "Cannot build '[^']+'" "$BUILDLOG" | sed 's/^/     /' | head -5 >&2
-      grep -E "^\s+> (can't find file to patch|error:|.*[Ee]rror)" "$BUILDLOG" | head -3 | sed 's/^/     /' >&2
+      show_failure
       say ""
       say "   上流が直ったか試すには、後日もう一度 nix-up を実行する。"
-      # ★変数の直後が全角文字のときは必ずブレースで囲む。囲まないと bash が
-      #   マルチバイト文字の先頭バイトを変数名の一部として読み、set -u で落ちる。
-      say "   ログ: ${BUILDLOG}（このプロセス終了で消える）"
     fi
   fi
 fi
@@ -84,11 +128,20 @@ if [ "$updated" = 0 ]; then
   if ! build_ok; then
     say ""
     say "✗ nix-up: 現行の設定がビルドできない。**適用せず中止する。**"
-    say "   上流ではなく flake.nix / home.nix 側の問題の可能性が高い:"
-    tail -20 "$BUILDLOG" | sed 's/^/     /' >&2
+    show_failure
+    say ""
+    # ★ここで原因を断定しない。2026-08-02、「home.nix 側の問題の可能性が高い」と
+    #   決めつけていたが、実際は残っていた壊れた lock が原因で home.nix は正常だった。
+    say "   flake.nix / home.nix の編集ミスか、commit 済み lock の nixpkgs 自体が"
+    say "   壊れているかのどちらか。上のログで切り分ける。"
     exit 1
   fi
   say "  ✓ ビルド成功"
+fi
+
+if [ "$CHECK_ONLY" = 1 ]; then
+  say "nix-up: --check なのでここで終了（switch も GC もしない）"
+  exit 0
 fi
 
 say "→ sudo darwin-rebuild switch"
