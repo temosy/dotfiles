@@ -32,10 +32,29 @@ changes remain uncommitted or unpushed.
 
 These rules apply to every repository, not only to dotfiles.
 
-Delete the head branch once a pull request is merged. Confirm first that
-`git diff --stat origin/main origin/<branch>` is empty. Do not rely on
-`git branch --merged`: a squash merge rewrites the SHA, so a merged branch
-still looks unmerged. Ask before running the deletion.
+Delete the head branch once a pull request is merged. Confirm first that the
+branch adds nothing `main` lacks — that its side of the diff has zero
+insertions:
+
+```bash
+git diff --numstat origin/main <branch> | awk '$1 != 0'   # no output means safe to delete
+```
+
+The first `--numstat` column is insertions, so an empty result means every
+line the branch has is already in `main`. Do not rely on `git branch --merged`
+or `git log main..<branch>`: a squash merge rewrites the SHA, so a merged
+branch still looks unmerged. Ask before running the deletion.
+
+Do not test for an *empty* diff. Both ways that reads wrong were hit on
+2026-08-08:
+
+- Naming the branch as `origin/<branch>` fails with a fatal error, because
+  `delete_branch_on_merge` already removed the remote branch. The error goes to
+  stderr and stdout stays empty, which looks exactly like a clean diff. Pass the
+  local branch name instead.
+- Once `main` moves ahead, a merged branch no longer has an empty diff: lines a
+  later pull request added show up as deletions. That branch is still safe to
+  delete.
 
 Enable `delete_branch_on_merge` on new repositories:
 `gh api -X PATCH repos/<owner>/<repo> -F delete_branch_on_merge=true`.

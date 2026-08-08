@@ -5,9 +5,22 @@ Claude Code は読まないので、要点だけをここに置く。**変更す
 
 ## Git / PR
 
-**マージ済みブランチは削除する。** 削除前に `git diff --stat origin/main origin/<branch>` が
-空であることを確認する（squash マージだと SHA が変わるので `git branch --merged` では
+**マージ済みブランチは削除する。** 削除前に **ブランチ側の挿入が 0** であることを確認する
+（squash マージだと SHA が変わるので `git branch --merged` や `git log main..<branch>` では
 判定できない）。削除の実行前には確認を取る。
+
+```bash
+git diff --numstat origin/main <branch> | awk '$1 != 0'   # 何も出なければ削除して安全
+```
+
+`--numstat` の1列目が挿入行数。**ブランチにあって main に無いもの**がゼロなら、中身は
+完全に main に入っている。**「差分が空」で判定しないこと**（2026-08-08 に両方踏んだ）:
+
+- **`origin/<branch>` を指すと fatal になり stdout が空になる。** `delete_branch_on_merge`
+  が有効なのでマージ直後にリモートブランチはもう無い。エラーは stderr に出るため、
+  出力を眺めただけでは「差分なし」と区別が付かない。**ローカルのブランチ名を渡す。**
+- **main が先に進んでいると、マージ済みでも差分は空にならない。** 後続 PR が足した行が
+  「削除」として出る。これは削除して安全なケース。
 
 **新規リポジトリでは `delete_branch_on_merge` を有効にする。**
 
