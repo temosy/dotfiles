@@ -81,19 +81,6 @@
           # rust-overlay を適用（home.nix で pkgs.rust-bin を使えるようにする）。
           nixpkgs.overlays = [
             rust-overlay.overlays.default
-
-            # Obsidian 1.13.4 の macOS DMG は Obsidian.app が一段深い場所にあるが、
-            # nixpkgs 側は直下を参照してビルドに失敗する。該当版だけ補正し、
-            # 次版では上流の定義へ自動的に戻す。
-            (final: prev: {
-              obsidian =
-                if prev.obsidian.version == "1.13.4" then
-                  prev.obsidian.overrideAttrs {
-                    sourceRoot = "Obsidian 1.13.4-universal/Obsidian.app";
-                  }
-                else
-                  prev.obsidian;
-            })
           ];
 
           users.users.haruo = {
