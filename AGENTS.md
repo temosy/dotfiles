@@ -32,29 +32,40 @@ changes remain uncommitted or unpushed.
 
 These rules apply to every repository, not only to dotfiles.
 
-Delete the head branch once a pull request is merged. Confirm first that the
-branch adds nothing `main` lacks — that its side of the diff has zero
-insertions:
+Delete the head branch once a pull request is merged. **Verify, then delete
+without asking** — asking every time is noise (2026-08-13). The check is that
+the branch's tip is exactly the head commit of a *merged* pull request, which
+also proves no local commit was left behind:
 
 ```bash
-git diff --numstat origin/main <branch> | awk '$1 != 0'   # no output means safe to delete
+b=<branch>
+[ "$(git rev-parse "$b")" = "$(gh pr list --head "$b" --state merged --json headRefOid -q '.[0].headRefOid')" ] \
+  && git branch -D "$b"
 ```
 
-The first `--numstat` column is insertions, so an empty result means every
-line the branch has is already in `main`. Do not rely on `git branch --merged`
-or `git log main..<branch>`: a squash merge rewrites the SHA, so a merged
-branch still looks unmerged. Ask before running the deletion.
+This is the authoritative check. A squash merge rewrites the SHA, so
+`git branch --merged` and `git log main..<branch>` both call a merged branch
+unmerged; `gh` knows the truth. Comparing the local tip guards the one real
+risk — a commit made locally after the pull request was pushed.
 
-Do not test for an *empty* diff. Both ways that reads wrong were hit on
-2026-08-08:
+Do not use a diff-based check as the primary test. `git diff --numstat` reads
+wrong in three ways, all hit in practice:
 
 - Naming the branch as `origin/<branch>` fails with a fatal error, because
   `delete_branch_on_merge` already removed the remote branch. The error goes to
-  stderr and stdout stays empty, which looks exactly like a clean diff. Pass the
-  local branch name instead.
+  stderr and stdout stays empty, which looks exactly like a clean diff
+  (2026-08-08). Pass the local branch name instead.
 - Once `main` moves ahead, a merged branch no longer has an empty diff: lines a
-  later pull request added show up as deletions. That branch is still safe to
-  delete.
+  later pull request added show up as deletions (2026-08-08). That branch is
+  still safe to delete.
+- **Scoping the diff to the files the branch touched does not save it.** If a
+  later pull request rewrote those same files, the branch's already-merged
+  lines come back as insertions and a merged branch looks unmerged (2026-08-13:
+  a branch fully contained in `main` reported 62 insertions, because the next
+  pull request replaced that function).
+
+Fall back to the diff check only when there is no pull request to consult, and
+read its output with the three failure modes above in mind.
 
 Enable `delete_branch_on_merge` on new repositories:
 `gh api -X PATCH repos/<owner>/<repo> -F delete_branch_on_merge=true`.
