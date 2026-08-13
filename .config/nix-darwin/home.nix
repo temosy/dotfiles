@@ -438,39 +438,14 @@ in
     };
   };
 
-  launchd.agents.devlog-draft = {
-    enable = true;
-    config = {
-      Label = "com.haruo.devlog-draft";
-      ProgramArguments = [
-        "/bin/sh" "-lc"
-        (devlogPublishSync + ''
-          if [ -f scripts/devlog_draft.py ]; then python3 scripts/devlog_draft.py; fi
-        '')
-      ];
-      StartCalendarInterval = [ { Hour = 23; Minute = 55; } ];
-      StandardOutPath = "/Users/haruo/Library/Logs/devlog-draft.log";
-      StandardErrorPath = "/Users/haruo/Library/Logs/devlog-draft.err.log";
-      RunAtLoad = false;
-    };
-  };
-
-  launchd.agents.devlog-publish-check = {
-    enable = true;
-    config = {
-      Label = "com.haruo.devlog-publish-check";
-      ProgramArguments = [
-        "/bin/sh" "-lc"
-        (devlogPublishSync + ''
-          if [ -f scripts/devlog_publish_check.py ]; then python3 scripts/devlog_publish_check.py; fi
-        '')
-      ];
-      StartInterval = 1800;
-      StandardOutPath = "/Users/haruo/Library/Logs/devlog-publish-check.log";
-      StandardErrorPath = "/Users/haruo/Library/Logs/devlog-publish-check.err.log";
-      RunAtLoad = false;
-    };
-  };
+  # ★devlog-draft / devlog-publish-check は **Fedora へ移した**（2026-08-10）。
+  #   ここに宣言を残さないこと。2026-08-12 13:13 の darwin-rebuild で plist が
+  #   書き戻り、8/13 の夜に Mac(23:55) と Fedora(23:56) が**別々の下書きを2通**
+  #   Telegram へ送った。プレビュー URL は日付だけで決まるので後勝ちになり、
+  #   公開判定は Fedora 側の message_id しか見ない。つまり**プレビューと違う記事が
+  #   公開されうる**状態だった。plist を消しても宣言が残っていれば必ず戻る。
+  #   いまの正: Fedora の system-kakari-devlog-draft.timer（23:55）と
+  #             system-kakari-devlog-publish.timer。設置は scripts/install-devlog.sh。
 
   # 前月ぶんのインフルエンス数値（サイト実訪問・GSC・GitHub・ブログ記事数）を
   # vault の月次記録テーブルへ書き込む（system-kakari scripts/influence_monthly.py）。
