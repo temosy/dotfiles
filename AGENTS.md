@@ -28,6 +28,27 @@ instead of Home Manager-generated symlinks such as `.zshrc`, `.zprofile`,
 Do not report the dotfiles update as complete while its reviewed repository
 changes remain uncommitted or unpushed.
 
+## Check the available tools first
+
+MCP tools arrive as a bare list of more than two hundred names with no
+descriptions; they are deferred, and their schemas load only on demand through
+`ToolSearch`. Anything not deliberately looked for stays buried, so confirm with
+`ToolSearch` before concluding that a capability is missing.
+
+- Thunderbird mail, folders, calendar, contacts — `mcp__thunderbird-mail__*`
+- Browser work needing the signed-in Chrome — `mcp__claude-in-chrome__*`
+- Throwaway browser verification — the Browser pane or `mcp__playwright__*`
+- macOS native applications — `mcp__computer-use__*`, `mcp__MacOS-MCP__*`
+- Recalling earlier conversations — `mcp__episodic-memory__*`
+
+Gmail, Google Calendar, Google Drive, Vercel, and Figma are connected as well,
+but their server names are UUIDs and cannot be recognized by sight. Find them by
+passing keywords (`gmail`, `calendar`, `drive`) to `ToolSearch`.
+
+Look for an application's own MCP server before touching its data directly. On
+2026-08-15 an agent tried to clean up Thunderbird mail with `rm` and by driving
+the GUI; both were correctly blocked, and the MCP `deleteFolder` tool did the job.
+
 ## Git and pull requests
 
 These rules apply to every repository, not only to dotfiles.

@@ -3,6 +3,27 @@
 **出典は `~/AGENTS.md`**（temosy/dotfiles で追跡）。Codex はホーム配下でそれを直接読む。
 Claude Code は読まないので、要点だけをここに置く。**変更するときは両方直すこと。**
 
+## 手を動かす前に、道具を確認する
+
+MCP ツールは**名前だけが200個以上並ぶ**形で渡され（deferred）、説明文が付かない。意識して
+探さない限り埋もれるので、「そんな手段は無い」と判断する前に必ず ToolSearch で確かめること。
+
+| 用事 | 使うもの |
+|---|---|
+| Thunderbird のメール・フォルダ・カレンダー・連絡先 | `mcp__thunderbird-mail__*` |
+| ログイン済み Chrome が要るブラウザ操作 | `mcp__claude-in-chrome__*` |
+| 使い捨てのブラウザ検証 | Browser ペイン / `mcp__playwright__*` |
+| macOS のネイティブアプリ操作 | `mcp__computer-use__*` / `mcp__MacOS-MCP__*` |
+| 過去の会話を思い出す | `mcp__episodic-memory__*` |
+
+Gmail・Google カレンダー・Google Drive・Vercel・Figma も繋がっているが、**サーバー名が
+UUID** なので名前では気づけない。ToolSearch にキーワード（`gmail` / `calendar` / `drive`
+など）を投げて引き当てること。
+
+**アプリのデータを直接いじる前に、そのアプリの MCP が無いか先に見る。** Thunderbird の
+メールを `rm` と GUI 操作で片付けようとして失敗した実績がある（2026-08-15。どちらも権限
+判定で止められ、MCP の `deleteFolder` で片付いた）。
+
 ## Git / PR
 
 **マージ済みブランチは削除する。確認を取らずに消してよい**（毎回聞かれるのが鬱陶しい・
