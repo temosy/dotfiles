@@ -45,6 +45,33 @@ let
     };
   };
 
+  # CrossOver: Wine alone is not supported by nixpkgs on aarch64-darwin, while
+  # CrossOver ships a native Apple Silicon frontend and runs 32-bit Windows apps.
+  # The app bundle is linked into ~/Applications/Home Manager Apps. Updates must
+  # be applied by bumping `version` and `hash` here, not from Sparkle in the app.
+  crossover = pkgs.stdenvNoCC.mkDerivation rec {
+    pname = "crossover";
+    version = "26.3.0";
+    src = pkgs.fetchurl {
+      url = "https://media-zh.codeweavers.com/pub/crossover/cxmac/demo/crossover-${version}.zip";
+      hash = "sha256-hojghIxOX3nxzDUctS0yRH2gDGwAz9O0uy0WTURYmiY=";
+    };
+    dontUnpack = true;
+    dontFixup = true;
+    installPhase = ''
+      runHook preInstall
+      mkdir -p "$out/Applications"
+      /usr/bin/ditto -x -k "$src" "$out/Applications"
+      runHook postInstall
+    '';
+    meta = {
+      description = "Run Windows applications on macOS without a Windows license";
+      homepage = "https://www.codeweavers.com/crossover";
+      license = pkgs.lib.licenses.unfree;
+      platforms = pkgs.lib.platforms.darwin;
+    };
+  };
+
   # macos-mcp（Claude デスクトップ拡張）専用に固定した uv。
   # 背景: pkgs.uv は署名なしで、nix-up のたびにストア実体（cdhash）が変わり、
   # macOS のアクセシビリティ(TCC)許可が無効化されて MCP が起動失敗する（Server disconnected）。
@@ -93,6 +120,11 @@ in
   home.activation.disableCodexBarSelfUpdate = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     /usr/bin/defaults write com.steipete.codexbar SUEnableAutomaticChecks -bool false
     /usr/bin/defaults write com.steipete.codexbar SUAutomaticallyUpdate -bool false
+  '';
+
+  home.activation.disableCrossOverSelfUpdate = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    /usr/bin/defaults write com.codeweavers.CrossOver SUEnableAutomaticChecks -bool false
+    /usr/bin/defaults write com.codeweavers.CrossOver SUAutomaticallyUpdate -bool false
   '';
 
   home.file.".local/bin/aider" = {
@@ -146,6 +178,7 @@ in
   home.packages = [
     aiderChat
     pkgs.codexbar
+    crossover
     pkgs.gh
     pkgs.nodejs
     pkgs.obsidian
