@@ -127,6 +127,43 @@ in
     /usr/bin/defaults write com.codeweavers.CrossOver SUAutomaticallyUpdate -bool false
   '';
 
+  # macos-mcp 拡張の起動コマンドを固定 uv（uvMcpPin）へ書き戻す。
+  # 拡張が自動更新されると manifest が上書きされて command が素の "uv"（PATH の pkgs.uv）に戻り、
+  # nix-up のたびに cdhash が変わってアクセシビリティ許可を失う（2026-10-03 に再発・実測）。
+  # command が "uv" のときだけ書き換える（冪等）。反映には Claude の再起動が要る。
+  home.activation.pinMacosMcpUv = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    ${pkgs.python3}/bin/python3 - <<'PY' || true
+    import json, os
+    pin = os.path.expanduser("~/.local/share/macos-mcp/bin/uv")
+    base = os.path.expanduser("~/Library/Application Support/Claude")
+    ext = "ant.dir.gh.cursortouch.macos-mcp"
+
+    def fix(cfg):
+        if cfg.get("command") == "uv":
+            cfg["command"] = pin
+            return True
+        return False
+
+    p = os.path.join(base, "Claude Extensions", ext, "manifest.json")
+    if os.path.exists(p):
+        d = json.load(open(p))
+        if fix(d["server"]["mcp_config"]):
+            json.dump(d, open(p, "w"), indent=2, ensure_ascii=False)
+            print("macos-mcp: manifest.json の command を固定 uv に戻した")
+
+    p = os.path.join(base, "extensions-installations.json")
+    if os.path.exists(p):
+        d = json.load(open(p))
+        changed = False
+        for v in d.values():
+            if isinstance(v, dict) and ext in v:
+                changed |= fix(v[ext]["manifest"]["server"]["mcp_config"])
+        if changed:
+            json.dump(d, open(p, "w"), ensure_ascii=False)
+            print("macos-mcp: extensions-installations.json の command を固定 uv に戻した")
+    PY
+  '';
+
   home.file.".local/bin/aider" = {
     source = "${lib.getExe aiderChat}";
     executable = true;
