@@ -490,6 +490,27 @@ in
     };
   };
 
+  # 連絡帳（AI どうしと人の共有ノート。正は NAS の DB）の Mac 側の同期を 1 分おきに。
+  # ~/Documents/Startup/連絡帳/送信箱/ のファイル（ミュズ男などシェルを使えない AI の
+  # 投稿）を NAS へ送り、DB から作り直された 連絡帳.md と 連絡帳/{ログ,手引き} を持ち帰る。
+  # スクリプトは system-kakari の scripts/install-renraku.sh が ~/.local/share/renraku/ に
+  # 置く（リポジトリの作業ツリーを直接使わない。作業中のブランチに左右されないため）。
+  # 置かれていない間は何もしない。
+  launchd.agents.renraku-sync = {
+    enable = true;
+    config = {
+      Label = "com.haruo.renraku-sync";
+      ProgramArguments = [
+        "/bin/sh" "-lc"
+        ''f="$HOME/.local/share/renraku/renraku_sync.py"; [ -f "$f" ] && python3 "$f" || true''
+      ];
+      StartInterval = 60;
+      RunAtLoad = true;
+      StandardOutPath = "/Users/haruo/Library/Logs/renraku-sync.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/renraku-sync.err.log";
+    };
+  };
+
   # devlog（~/projects/devlog、cargo install 済みバイナリ）で作業記録を vault に毎時蓄積。
   # 毎時は --no-llm（軽量・上書きで当日分を再集計）、23:40 に LLM で清書。
   # Ollama 停止時は devlog 側が生データ出力へフォールバックするので失敗しない。
