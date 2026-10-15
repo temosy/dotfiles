@@ -627,6 +627,25 @@ in
     };
   };
 
+  # ログイン時に CodexBar を開く（両方の Mac）。
+  # macOS の「ログイン項目」に GUI で追加すると、symlink を辿った /nix/store の実パスが
+  # 記録される。nix-up で版が上がっても古い版が起動し、その世代が GC されると起動に失敗する
+  # （2026-10-16、MacBook で 0.43.0 のパスのまま残っていた）。ここでは Home Manager が
+  # 毎回張り直す安定したパスを開くので、常に今の版が起動する。
+  # ログイン項目にも CodexBar を登録していると二重になるので、そちらは外すこと。
+  launchd.agents.codexbar = {
+    enable = true;
+    config = {
+      Label = "com.haruo.codexbar";
+      ProgramArguments = [
+        "/usr/bin/open" "-a" "/Users/haruo/Applications/Home Manager Apps/CodexBar.app"
+      ];
+      RunAtLoad = true;
+      StandardOutPath = "/Users/haruo/Library/Logs/codexbar-launch.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/codexbar-launch.err.log";
+    };
+  };
+
   launchd.agents.normalize-screenshot-names = {
     enable = true;
     config = {
