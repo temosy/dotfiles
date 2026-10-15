@@ -31,6 +31,9 @@ are intentionally excluded. Examples include `.codex/auth.json`,
 ## Nix managed macOS setup
 
 The current macOS environment is managed with nix-darwin and Home Manager.
+`flake.nix` defines the same configuration for each Mac under its
+`LocalHostName` (`Haruos-MacBook-Pro` and `HaruonoMac-Studio`), so
+`darwin-rebuild` picks the right one automatically.
 
 Apply the configuration with:
 
@@ -41,7 +44,7 @@ sudo darwin-rebuild switch --flake ~/.config/nix-darwin
 Build without applying:
 
 ```sh
-nix build ~/.config/nix-darwin#darwinConfigurations.Haruos-MacBook-Pro.system --no-link
+nix build ~/.config/nix-darwin#darwinConfigurations.$(scutil --get LocalHostName).system --no-link
 ```
 
 ## zsh

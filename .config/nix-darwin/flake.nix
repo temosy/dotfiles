@@ -19,8 +19,10 @@
     };
   };
 
-  outputs = { self, nix-darwin, nixpkgs, home-manager, nixpkgs-llama-cpp, rust-overlay }: {
-    darwinConfigurations."Haruos-MacBook-Pro" = nix-darwin.lib.darwinSystem {
+  outputs = { self, nix-darwin, nixpkgs, home-manager, nixpkgs-llama-cpp, rust-overlay }:
+  let
+    # 全ホスト共通の構成。ホストごとの違いが要るようになったら引数で渡す。
+    darwin = nix-darwin.lib.darwinSystem {
       system = "aarch64-darwin";
       modules = [
         ({ pkgs, ... }: {
@@ -100,5 +102,8 @@
         }
       ];
     };
+  in {
+    darwinConfigurations."Haruos-MacBook-Pro" = darwin;
+    darwinConfigurations."HaruonoMac-Studio" = darwin;
   };
 }
