@@ -269,6 +269,10 @@ in
   home.packages = [
     aiderChat
     pkgs.codexbar
+    # Claude Code の CLI（`claude`）。Claude Desktop 同梱版は版ごとにパスが変わり PATH に無い。
+    # CodexBar の Claude 使用状況は、この CLI でログインしたときにキーチェーンへ入る
+    # 「Claude Code-credentials」を読むので、新しい Mac では一度 `claude /login` する。
+    pkgs.claude-code
     crossover
     pkgs.gh
     pkgs.nodejs
