@@ -119,7 +119,10 @@ in
   # CodexBar is installed from nixpkgs, so app-internal Sparkle updates cannot
   # replace the read-only app bundle in the Nix store. Upgrade it via
   # `nix flake update` and `darwin-rebuild switch` instead.
+  # The app's own `autoUpdateEnabled` setting (default on) rewrites the Sparkle
+  # keys at every launch, so turning off only the SU* keys does not stick.
   home.activation.disableCodexBarSelfUpdate = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    /usr/bin/defaults write com.steipete.codexbar autoUpdateEnabled -bool false
     /usr/bin/defaults write com.steipete.codexbar SUEnableAutomaticChecks -bool false
     /usr/bin/defaults write com.steipete.codexbar SUAutomaticallyUpdate -bool false
   '';
