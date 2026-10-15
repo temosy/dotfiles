@@ -166,6 +166,55 @@ in
     PY
   '';
 
+  # AWS API MCP 拡張（awslabs/aws-api-mcp-server）の依存を mcp<2 に固定する起動引数へ書き戻す。
+  # 背景: 配布版 1.3.3 は uv.lock で mcp 2.3.0 を固定しているのに、コードは mcp 1.x の
+  # `McpError` を import するため、起動直後に ImportError で落ちる（Server disconnected）。
+  # mcp 1.30 / fastmcp 2.14 なら動くことを確認済み（2026-10-16）。
+  # 拡張が自動更新されると manifest が上書きされて元に戻るので、activation で毎回直す。
+  # 書き換えるのは「入っているコードがまだ McpError を import している」間だけ。
+  # 上流が mcp 2.x に対応したら条件が外れ、何もしなくなる。反映には Claude の再起動が要る。
+  home.activation.pinAwsMcpDeps = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    ${pkgs.python3}/bin/python3 - <<'PY' || true
+    import json, os, subprocess
+    base = os.path.expanduser("~/Library/Application Support/Claude")
+    ext = "ant.dir.gh.awslabs.aws-api-mcp-server"
+    src = os.path.join(base, "Claude Extensions", ext, "src")
+    if not os.path.isdir(src):
+        raise SystemExit
+    needs_pin = subprocess.run(
+        ["grep", "-rqF", "from mcp.shared.exceptions import McpError", src]).returncode == 0
+    if not needs_pin:
+        raise SystemExit
+    args = ["run", "--no-project", "--python", "3.12",
+            "--with", "''${__dirname}", "--with", "mcp<2", "--with", "fastmcp<3",
+            "python", "-m", "awslabs.aws_api_mcp_server.server"]
+
+    def fix(cfg):
+        if cfg.get("args") != args:
+            cfg["args"] = args
+            return True
+        return False
+
+    p = os.path.join(base, "Claude Extensions", ext, "manifest.json")
+    if os.path.exists(p):
+        d = json.load(open(p))
+        if fix(d["server"]["mcp_config"]):
+            json.dump(d, open(p, "w"), indent=2, ensure_ascii=False)
+            print("aws-api-mcp: manifest.json の起動引数を mcp<2 固定に戻した")
+
+    p = os.path.join(base, "extensions-installations.json")
+    if os.path.exists(p):
+        d = json.load(open(p))
+        changed = False
+        for v in d.values():
+            if isinstance(v, dict) and ext in v:
+                changed |= fix(v[ext]["manifest"]["server"]["mcp_config"])
+        if changed:
+            json.dump(d, open(p, "w"), ensure_ascii=False)
+            print("aws-api-mcp: extensions-installations.json の起動引数を mcp<2 固定に戻した")
+    PY
+  '';
+
   home.file.".local/bin/aider" = {
     source = "${lib.getExe aiderChat}";
     executable = true;
