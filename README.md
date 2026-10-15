@@ -105,6 +105,10 @@ The order below avoids the problems hit while setting up the Mac Studio.
 6. Sign in to GitHub with `gh auth login`. Git uses `gh` as its credential
    helper, and system-kakari is cloned over HTTPS, so the new Mac needs no
    GitHub SSH key.
+7. Sign in to Claude Code with `claude /login` (`claude` comes from
+   `pkgs.claude-code`). CodexBar reads Claude plan usage from the Keychain
+   item this creates; without it CodexBar shows "Claude OAuth credentials not
+   found".
 
 On macOS 15 and later, apps need the Local Network permission to reach LAN
 hosts. A terminal without it gets "No route to host" over SSH even though
