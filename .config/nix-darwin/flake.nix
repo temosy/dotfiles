@@ -21,8 +21,10 @@
 
   outputs = { self, nix-darwin, nixpkgs, home-manager, nixpkgs-llama-cpp, rust-overlay }:
   let
-    # 全ホスト共通の構成。ホストごとの違いが要るようになったら引数で渡す。
-    darwin = nix-darwin.lib.darwinSystem {
+    # 全ホスト共通の構成。ホストごとの違いは引数で渡す。
+    # isMainMac: vault を書く launchd ジョブや ComfyUI など、2 台で同時に
+    # 動かしてはいけないものを有効にするホストか（home.nix 参照）。
+    mkDarwin = { isMainMac }: nix-darwin.lib.darwinSystem {
       system = "aarch64-darwin";
       modules = [
         ({ pkgs, ... }: {
@@ -96,14 +98,15 @@
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.extraSpecialArgs = {
-            inherit nixpkgs-llama-cpp;
+            inherit nixpkgs-llama-cpp isMainMac;
           };
           home-manager.users.haruo = import ./home.nix;
         }
       ];
     };
   in {
-    darwinConfigurations."Haruos-MacBook-Pro" = darwin;
-    darwinConfigurations."HaruonoMac-Studio" = darwin;
+    # 2026-10-16 に主機を MacBook Pro から Mac Studio へ移した。
+    darwinConfigurations."Haruos-MacBook-Pro" = mkDarwin { isMainMac = false; };
+    darwinConfigurations."HaruonoMac-Studio" = mkDarwin { isMainMac = true; };
   };
 }

@@ -1,4 +1,4 @@
-{ pkgs, lib, nixpkgs-llama-cpp, ... }:
+{ pkgs, lib, nixpkgs-llama-cpp, isMainMac, ... }:
 
 let
   mattPocockSkills = pkgs.fetchFromGitHub {
@@ -91,7 +91,9 @@ let
     CLONE="$HOME/Library/Caches/devlog-publish/system-kakari"
     mkdir -p "$(dirname "$CLONE")"
     if [ ! -d "$CLONE/.git" ]; then
-      git clone git@github.com:temosy/system-kakari.git "$CLONE" || exit 0
+      # HTTPS で clone する（認証は programs.git の gh auth git-credential）。
+      # SSH だとホストごとに GitHub への鍵登録が要る（Mac Studio には無い）。
+      git clone https://github.com/temosy/system-kakari.git "$CLONE" || exit 0
     fi
     cd "$CLONE" && git fetch origin main -q && git checkout -q main && git reset --hard -q origin/main
   '';
@@ -475,8 +477,11 @@ in
     fi
   '';
 
+  # `enable = isMainMac` のジョブは主機（flake.nix で isMainMac = true のホスト）だけで動かす。
+  # vault（Obsidian Sync で全端末に配られる）を書くジョブを 2 台で動かすと二重に書き込むため。
+  # ComfyUI と NAS トンネルも主機に集約した（2026-10-16、MacBook Pro → Mac Studio）。
   launchd.agents.x-bookmarks = {
-    enable = true;
+    enable = isMainMac;
     config = {
       Label = "com.haruo.x-bookmarks";
       ProgramArguments = [
@@ -497,7 +502,7 @@ in
   # 置く（リポジトリの作業ツリーを直接使わない。作業中のブランチに左右されないため）。
   # 置かれていない間は何もしない。
   launchd.agents.renraku-sync = {
-    enable = true;
+    enable = isMainMac;
     config = {
       Label = "com.haruo.renraku-sync";
       ProgramArguments = [
@@ -515,7 +520,7 @@ in
   # 毎時は --no-llm（軽量・上書きで当日分を再集計）、23:40 に LLM で清書。
   # Ollama 停止時は devlog 側が生データ出力へフォールバックするので失敗しない。
   launchd.agents.devlog-hourly = {
-    enable = true;
+    enable = isMainMac;
     config = {
       Label = "com.haruo.devlog-hourly";
       ProgramArguments = [
@@ -542,7 +547,7 @@ in
   # vault の月次記録テーブルへ書き込む（system-kakari scripts/influence_monthly.py）。
   # 読み取り専用（vault 以外は書き換えない）なので devlog の隔離クローンと共用してよい。
   launchd.agents.influence-monthly = {
-    enable = true;
+    enable = isMainMac;
     config = {
       Label = "com.haruo.influence-monthly";
       ProgramArguments = [
@@ -559,7 +564,7 @@ in
   };
 
   launchd.agents.devlog-nightly = {
-    enable = true;
+    enable = isMainMac;
     config = {
       Label = "com.haruo.devlog-nightly";
       ProgramArguments = [
@@ -604,7 +609,7 @@ in
   # ComfyUI ローカルサーバを常駐化。venv 自体は Nix 管理外（uv で作成）のまま、
   # 起動だけ宣言的に。image-gen-rust アプリが 127.0.0.1:8188 へ接続する。
   launchd.agents.comfyui = {
-    enable = true;
+    enable = isMainMac;
     config = {
       Label = "com.haruo.comfyui";
       ProgramArguments = [
@@ -632,7 +637,7 @@ in
   # MariaDB は NAS 上で 0.0.0.0:3306 で待受しているが LAN 越しの新規グラントは作らない
   # （攻撃対象を増やさないため）。切断時は launchd の KeepAlive で自動再接続。
   launchd.agents.kakari-db-tunnel = {
-    enable = true;
+    enable = isMainMac;
     config = {
       Label = "com.haruo.kakari-db-tunnel";
       ProgramArguments = [
