@@ -35,6 +35,10 @@
 
           fonts.packages = [
             pkgs.source-han-code-jp
+            # CrossOver（Wine）の DirectWrite は、日本語の文字が無いと「Noto Sans CJK JP」へ
+            # フォールバックする。これが無いと WPF 製のアプリ（FFXV ベンチのランチャー等）で
+            # かなが豆腐になる。Wine は可変フォントを正しく読めないことがあるので static 版。
+            pkgs.noto-fonts-cjk-sans-static
           ];
 
           programs.zsh.enable = true;
