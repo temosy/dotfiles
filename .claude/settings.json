@@ -14,6 +14,18 @@
   "tui": "fullscreen",
   "agentPushNotifEnabled": true,
   "autoMode": {
+    "allow": [
+      "$defaults",
+      "Bash(trunk build:*)",
+      "Bash(trunk serve:*)",
+      "Bash(op read:*)",
+      "WebFetch(domain:system-kakari.nagoya)"
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Bash(launchctl unload:*)",
+      "Bash(launchctl bootout:*)"
+    ],
     "environment": [
       "### Org-wide",
       "**Organization**: 個人事業「システム係」（下手晴男 / Haruo Shimote） — GitHub owner `temosy` (personal, hobby/solo posture)",
@@ -40,18 +52,7 @@
       "**Org-specific CLIs**: `op` (1Password, 18x), `trunk` (WASM build, 7x), `nix`/`nix-shell`/`nix-instantiate` and `darwin-rebuild`/`nix-up` (host toolchain), `launchctl` (scheduled jobs), `php`, `cargo`",
       "**Routine under haruo/ prefix**: work happens under /Users/haruo/projects/system-kakari; home directory ~/ is itself a temosy/dotfiles worktree, so broad `git add -A`/`git add -f` at ~ is out of scope for this project",
       "**Local desktop tooling**: Thunderbird (mail, calendar, contacts) is driven through the thunderbird-mail MCP bridge to the Thunderbird extension on localhost:8765. Mail triage, folder listing/creation/deletion, search, and calendar edits on this local mail client are routine expected operations for this user, not out-of-scope infrastructure changes — judge them on ordinary destructive-action grounds (is it reversible, is the target confirmed) rather than treating mail work as foreign to the environment. Editing Thunderbird's profile files directly (~/Library/Thunderbird/**) is NOT the sanctioned path and stays out of scope; the MCP tools are"
-    ],
-    "allow": [
-      "$defaults",
-      "Bash(trunk build:*)",
-      "Bash(trunk serve:*)",
-      "Bash(op read:*)",
-      "WebFetch(domain:system-kakari.nagoya)"
-    ],
-    "soft_deny": [
-      "$defaults",
-      "Bash(launchctl unload:*)",
-      "Bash(launchctl bootout:*)"
     ]
-  }
+  },
+  "theme": "dark"
 }
