@@ -767,6 +767,33 @@ in
     };
   };
 
+  # PainSeeker から karte-db（NAS の 192.168.1.18:5432）へのトンネル。127.0.0.1:15432 で受ける。
+  # ★launchd から起動した painseeker は、macOS の「ローカルネットワーク」の許可が無く LAN に
+  #   出られない（No route to host・2026-10-16 実測）。素の実行ファイルは許可の一覧にも
+  #   出ないので許可のしようがない。macOS 付属の /usr/bin/ssh はこの制限を受けないので、
+  #   ssh で NAS まで運び、NAS 自身から 192.168.1.18:5432 に繋ぐ（pg_hba の LAN の許可に入る）。
+  #   config.json の database_url は 127.0.0.1:15432 を指す。
+  launchd.agents.painseeker-db-tunnel = {
+    enable = isMainMac;
+    config = {
+      Label = "com.haruo.painseeker-db-tunnel";
+      ProgramArguments = [
+        "/usr/bin/ssh" "-N"
+        "-o" "ExitOnForwardFailure=yes"
+        "-o" "ServerAliveInterval=30"
+        "-o" "ServerAliveCountMax=3"
+        "-o" "BatchMode=yes"
+        "-L" "15432:192.168.1.18:5432"
+        "haruo@192.168.1.18"
+      ];
+      RunAtLoad = true;
+      KeepAlive = true;
+      ProcessType = "Background";
+      StandardOutPath = "/Users/haruo/Library/Logs/painseeker-db-tunnel.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/painseeker-db-tunnel.err.log";
+    };
+  };
+
   # saeko-rp（Ollama＋ComfyUI のロールプレイ Web・:8770）。ComfyUI は上の comfyui を共用する。
   # 印のファイルがある間だけ常駐させる（KeepAlive の PathState。印を消せば止まる）。
   # Windows の ComfyUIWatchdog の役は ComfyUI 側の KeepAlive が担う。
