@@ -157,6 +157,9 @@
   in {
     # 2026-10-16 に主機を MacBook Pro から Mac Studio へ移した。
     darwinConfigurations."Haruos-MacBook-Pro" = mkDarwin { isMainMac = false; };
-    darwinConfigurations."HaruonoMac-Studio" = mkDarwin { isMainMac = true; };
+    # 2026-10-16 夜に Mac Studio のホスト名を HaruonoMac-Studio → system-kakari-studio に変えた。
+    # darwin-rebuild は LocalHostName（scutil --get LocalHostName）で構成を選ぶので、名前を変えたら
+    # ここも直す（直さないと nix-up が「構成が無い」で止まる）。
+    darwinConfigurations."system-kakari-studio" = mkDarwin { isMainMac = true; };
   };
 }

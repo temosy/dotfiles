@@ -59,7 +59,7 @@ activation stops halfway.
 
 | Host | `isMainMac` | Role |
 |---|---|---|
-| `HaruonoMac-Studio` | `true` | Main machine since 2026-10-16 |
+| `system-kakari-studio` | `true` | Main machine since 2026-10-16 (was `HaruonoMac-Studio` until that evening) |
 | `Haruos-MacBook-Pro` | `false` | Secondary machine |
 
 Both hosts share every package and setting. The only difference is
