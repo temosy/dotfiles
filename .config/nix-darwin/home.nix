@@ -723,6 +723,66 @@ in
     };
   };
 
+  # ── Windows 機（192.168.1.21）から移した常駐（2026-10-16 オーナー判断「furikae 以外は Mac Studio で」）──
+  # どれも「動いてよい」印のファイルが無ければ動かない。宣言を先に入れても Windows と二重には
+  # 動かない（Windows のタスクを止めてから印を置く。手順は system-kakari の docs/MacStudioへ移す手順.md）。
+  #   painseeker: ~/.local/share/painseeker/ENABLED   saeko-rp: ~/.local/share/saeko-rp/ENABLED
+  # 実行ファイルは各リポジトリの target/release（Windows でも同じくビルド置き場から動かしていた）。
+
+  # PainSeeker（困りごとの収集・分析）。karte-db（NAS）へ直接書く。Windows の 3 タスクと同じ間隔・引数
+  launchd.agents.painseeker-worker = {
+    enable = isMainMac;
+    config = {
+      Label = "com.haruo.painseeker-worker";
+      ProgramArguments = [ "/bin/sh" "-c"
+        "test -f /Users/haruo/.local/share/painseeker/ENABLED || exit 0; exec /Users/haruo/projects/painseeker/target/release/painseeker --run-daily" ];
+      StartInterval = 1800;
+      ProcessType = "Background";
+      StandardOutPath = "/Users/haruo/Library/Logs/painseeker-worker.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/painseeker-worker.log";
+    };
+  };
+  launchd.agents.painseeker-competitors = {
+    enable = isMainMac;
+    config = {
+      Label = "com.haruo.painseeker-competitors";
+      ProgramArguments = [ "/bin/sh" "-c"
+        "test -f /Users/haruo/.local/share/painseeker/ENABLED || exit 0; exec /Users/haruo/projects/painseeker/target/release/painseeker --collect-competitors 20 brave" ];
+      StartCalendarInterval = [ { Hour = 9; Minute = 0; } ];
+      ProcessType = "Background";
+      StandardOutPath = "/Users/haruo/Library/Logs/painseeker-competitors.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/painseeker-competitors.log";
+    };
+  };
+  launchd.agents.painseeker-market-size = {
+    enable = isMainMac;
+    config = {
+      Label = "com.haruo.painseeker-market-size";
+      ProgramArguments = [ "/bin/sh" "-c"
+        "test -f /Users/haruo/.local/share/painseeker/ENABLED || exit 0; exec /Users/haruo/projects/painseeker/target/release/painseeker --collect-market-size 10 brave" ];
+      StartCalendarInterval = [ { Hour = 9; Minute = 15; } ];
+      ProcessType = "Background";
+      StandardOutPath = "/Users/haruo/Library/Logs/painseeker-market-size.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/painseeker-market-size.log";
+    };
+  };
+
+  # saeko-rp（Ollama＋ComfyUI のロールプレイ Web・:8770）。ComfyUI は上の comfyui を共用する。
+  # 印のファイルがある間だけ常駐させる（KeepAlive の PathState。印を消せば止まる）。
+  # Windows の ComfyUIWatchdog の役は ComfyUI 側の KeepAlive が担う。
+  launchd.agents.saeko-rp = {
+    enable = isMainMac;
+    config = {
+      Label = "com.haruo.saeko-rp";
+      ProgramArguments = [ "/Users/haruo/projects/saeko-rp/target/release/saeko-rp" ];
+      WorkingDirectory = "/Users/haruo/projects/saeko-rp";
+      KeepAlive = { PathState = { "/Users/haruo/.local/share/saeko-rp/ENABLED" = true; }; };
+      ProcessType = "Standard";
+      StandardOutPath = "/Users/haruo/Library/Logs/saeko-rp.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/saeko-rp.log";
+    };
+  };
+
   # system-kakari の地域ダッシュボード用 DB（kakari_region）へ Mac からアクセスするための
   # 常駐 SSH トンネル。127.0.0.1:13306 → NAS の 127.0.0.1:3306（NAS 側のループバックに
   # 接続するため、既存の読み取り専用ユーザー kakari_ro@'localhost' がそのまま使える。
