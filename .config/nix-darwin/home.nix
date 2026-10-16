@@ -706,6 +706,23 @@ in
     };
   };
 
+  # system-kakari の GSC インデックス登録リクエスト（Windows 機から移す・2026-10-16）。
+  # ブラウザの画面が要るので kakari ではなく haruo で動かす。Fedora の毎時ジョブが
+  # ssh mac-auto kick gsc → kakari が /Users/Shared/kakari/gsc-trigger を書き換え → ここが拾う。
+  # 中身は system-kakari の scripts/install-mac-studio.sh が ~/gsc-indexer に置き、
+  # ENABLED が無ければ何もしない（切り替えは同リポジトリの docs/MacStudioへ移す手順.md）。
+  launchd.agents.gsc-indexer = {
+    enable = isMainMac;
+    config = {
+      Label = "com.haruo.gsc-indexer";
+      ProgramArguments = [ "/bin/sh" "-c"
+        "test -x /Users/haruo/gsc-indexer/run.sh || exit 0; exec /bin/bash /Users/haruo/gsc-indexer/run.sh" ];
+      WatchPaths = [ "/Users/Shared/kakari/gsc-trigger" ];
+      ProcessType = "Background";
+      StandardErrorPath = "/Users/haruo/Library/Logs/gsc-indexer.err.log";
+    };
+  };
+
   # system-kakari の地域ダッシュボード用 DB（kakari_region）へ Mac からアクセスするための
   # 常駐 SSH トンネル。127.0.0.1:13306 → NAS の 127.0.0.1:3306（NAS 側のループバックに
   # 接続するため、既存の読み取り専用ユーザー kakari_ro@'localhost' がそのまま使える。
