@@ -20,6 +20,11 @@ Gmail・Google カレンダー・Google Drive・Vercel・Figma も繋がって�
 UUID** なので名前では気づけない。ToolSearch にキーワード（`gmail` / `calendar` / `drive`
 など）を投げて引き当てること。
 
+**メールが「届いたか」は Gmail の MCP で自分で確かめる。「受信箱は見えない」と言わない。**
+`haruo.shimote@system-kakari.nagoya` も `notify@system-kakari.nagoya` 宛ても Gmail
+（funkypapa2@gmail.com）に入り、「システム係」ラベルに振り分けられて受信トレイをスキップする。
+検索は `in:anywhere from:… newer_than:1d` のように `in:anywhere` を付ける（2026-10-24）。
+
 **アプリのデータを直接いじる前に、そのアプリの MCP が無いか先に見る。** Thunderbird の
 メールを `rm` と GUI 操作で片付けようとして失敗した実績がある（2026-08-15。どちらも権限
 判定で止められ、MCP の `deleteFolder` で片付いた）。

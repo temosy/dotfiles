@@ -45,6 +45,12 @@ Gmail, Google Calendar, Google Drive, Vercel, and Figma are connected as well,
 but their server names are UUIDs and cannot be recognized by sight. Find them by
 passing keywords (`gmail`, `calendar`, `drive`) to `ToolSearch`.
 
+Whether a mail arrived is something to verify yourself through the Gmail MCP; never
+say the inbox cannot be seen. Mail to `haruo.shimote@system-kakari.nagoya` and to
+`notify@system-kakari.nagoya` lands in Gmail (funkypapa2@gmail.com), filed under the
+「システム係」 label and skipping the inbox, so search with `in:anywhere` (for example
+`in:anywhere from:… newer_than:1d`) (2026-10-24).
+
 Look for an application's own MCP server before touching its data directly. On
 2026-08-15 an agent tried to clean up Thunderbird mail with `rm` and by driving
 the GUI; both were correctly blocked, and the MCP `deleteFolder` tool did the job.
