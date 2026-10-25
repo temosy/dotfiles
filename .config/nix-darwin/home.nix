@@ -723,6 +723,25 @@ in
     };
   };
 
+  # レバテックの応募すすめボット（system-kakari の scripts/levtech_agent.py）。常駐して
+  # 専用ボットのボタンを待ち、15 分おきに提案を見る。中身は同リポジトリの
+  # scripts/install-levtech-agent.sh が ~/levtech-agent に置き、ENABLED が無ければ何もしない。
+  # 落ちたときだけ起こし直す（置かれていなければ exit 0 で止まったままにする）。
+  launchd.agents.levtech-agent = {
+    enable = isMainMac;
+    config = {
+      Label = "com.haruo.levtech-agent";
+      ProgramArguments = [ "/bin/sh" "-c"
+        "test -x /Users/haruo/levtech-agent/.venv/bin/python || exit 0; exec /Users/haruo/levtech-agent/.venv/bin/python /Users/haruo/levtech-agent/levtech_agent.py" ];
+      RunAtLoad = true;
+      KeepAlive = { SuccessfulExit = false; };
+      ThrottleInterval = 60;
+      ProcessType = "Background";
+      StandardOutPath = "/Users/haruo/levtech-agent/agent.log";
+      StandardErrorPath = "/Users/haruo/levtech-agent/agent.log";
+    };
+  };
+
   # ── Windows 機（192.168.1.21）から移した常駐（2026-10-16 オーナー判断「furikae 以外は Mac Studio で」）──
   # どれも「動いてよい」印のファイルが無ければ動かない。宣言を先に入れても Windows と二重には
   # 動かない（Windows のタスクを止めてから印を置く。手順は system-kakari の docs/MacStudioへ移す手順.md）。
