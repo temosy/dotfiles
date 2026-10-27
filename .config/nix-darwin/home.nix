@@ -332,6 +332,22 @@ in
     # Mac に無いと「サーバーが全損したときに手元で戻せない」ことになり、
     # バックアップの意味が消える（2026-08-04 の復元テストで実際に詰まった）。
     pkgs.gnupg
+
+    # 客先 LAN に Mac を持ち込んでネットワーク構成を調べるため（2026-10-27 彦中産業様の現場調査）。
+    # ・nmap / zenmap: 端末発見・ポート確認・経路図。結果の XML を ~/projects/net-survey が
+    #   Excel（.xlsx）・draw.io（.drawio）・CSV・SVG に変換する
+    # ・arp-scan: ARP で同一セグメントの端末と MAC を拾う（ping に答えない機器も出る）
+    # ・lldpd: `sudo lldpd -d` で起こし `lldpcli show neighbors` で繋いだスイッチの名前とポートを見る
+    # ・mtr / iperf3 / tshark: 経路の途中損失・スループット・パケットの記録（断続的な切断の切り分け）
+    # ・drawio: 出した構成図をその場で開いて直す
+    pkgs.nmap
+    pkgs.zenmap
+    pkgs.arp-scan
+    pkgs.lldpd
+    pkgs.mtr
+    pkgs.iperf3
+    pkgs.wireshark-cli
+    pkgs.drawio
   ];
 
   # macos-mcp 拡張が使う固定 uv を安定パスに公開する。
