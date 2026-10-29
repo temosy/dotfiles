@@ -10,9 +10,9 @@ let
 
   # `gemma-agent` uses Aider as its CLI frontend.
   # Add Python's `rsa` dependency explicitly because aider-chat needs it at runtime.
-  aiderChat = pkgs.aider-chat.overridePythonAttrs (old: {
-    dependencies = old.dependencies ++ [ pkgs.python3Packages.rsa ];
-  });
+  # aiderChat = pkgs.aider-chat.overridePythonAttrs (old: {
+    # dependencies = old.dependencies ++ [ pkgs.python3Packages.rsa ];
+  # });
 
   llamaCppPkgs = import nixpkgs-llama-cpp {
     system = pkgs.stdenv.hostPlatform.system;
@@ -218,10 +218,10 @@ in
     PY
   '';
 
-  home.file.".local/bin/aider" = {
-    source = "${lib.getExe aiderChat}";
-    executable = true;
-  };
+  # home.file.".local/bin/aider" = {
+    # source = "${lib.getExe aiderChat}";
+    # executable = true;
+  # };
 
   home.file.".agents/skills/grill-with-docs" = {
     source = "${mattPocockSkills}/skills/engineering/grill-with-docs";
@@ -267,7 +267,7 @@ in
   '';
 
   home.packages = [
-    aiderChat
+    # aiderChat
     pkgs.codexbar
     # Claude Code の CLI（`claude`）。Claude Desktop 同梱版は版ごとにパスが変わり PATH に無い。
     # CodexBar の Claude 使用状況は、この CLI でログインしたときにキーチェーンへ入る
@@ -377,7 +377,7 @@ in
     shellAliases = {
       python = "python3";
       subl = "/Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl";
-      gemma-agent = "OLLAMA_API_BASE=http://127.0.0.1:11434 aider --model ollama_chat/gemma4:26b --chat-language Japanese --commit-language English --no-auto-commits";
+      # gemma-agent = "OLLAMA_API_BASE=http://127.0.0.1:11434 aider --model ollama_chat/gemma4:26b --chat-language Japanese --commit-language English --no-auto-commits";
       gitlog = "git log --oneline --graph";
       youtube-dl = "yt-dlp";
       ya = ''yt-dlp -x --embed-thumbnail --audio-format mp3 --audio-quality 0 -o "$HOME/Music/%(title)s.%(ext)s"'';
