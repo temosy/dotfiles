@@ -573,6 +573,24 @@ in
   # スクリプトは system-kakari の scripts/install-renraku.sh が ~/.local/share/renraku/ に
   # 置く（リポジトリの作業ツリーを直接使わない。作業中のブランチに左右されないため）。
   # 置かれていない間は何もしない。
+  # 脆弱性見張り番（temosy/mihariban）: この Mac と LAN の Mac を 1 時間おきに調べ、拠点 home の送り元 macs として
+  # NAS へ送る。スクリプト・バイナリ・トークン（~/.config/mihariban/macs.env・0600）は mihariban の
+  # deploy/mac/install.sh が置く。置いていなければ何もしない
+  launchd.agents.mihariban-macs = {
+    enable = isMainMac;
+    config = {
+      Label = "com.haruo.mihariban-macs";
+      ProgramArguments = [
+        "/bin/sh" "-lc"
+        ''f="$HOME/.local/share/mihariban/send-macs.sh"; [ -x "$f" ] && "$f" || true''
+      ];
+      StartCalendarInterval = [ { Minute = 35; } ];
+      RunAtLoad = true;
+      StandardOutPath = "/Users/haruo/Library/Logs/mihariban-macs.log";
+      StandardErrorPath = "/Users/haruo/Library/Logs/mihariban-macs.err.log";
+    };
+  };
+
   launchd.agents.renraku-sync = {
     enable = isMainMac;
     config = {
